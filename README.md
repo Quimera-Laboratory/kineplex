@@ -10,6 +10,15 @@
 
 ---
 
+<p align="center">
+  <img src="docs/images/img-01.png" alt="Portal KinePlex - Visão Geral do Cluster & Telemetria em Tempo Real" width="100%" />
+</p>
+<p align="center">
+  <em><strong>Portal KinePlex:</strong> Monitoramento visual distribuído de 20 nós em 4 domínios NUMA, topologia de rede, taxas de Spikes Arrow IPC e telemetria de latência em tempo real.</em>
+</p>
+
+---
+
 ## Sumário
 
 1. [Sumário Executivo e Racional de Disrupção](#1-sumário-executivo-e-racional-de-disrupção)
@@ -1094,11 +1103,32 @@ Para iniciar o painel de gerenciamento visual do cluster:
 # Iniciar o servidor local da interface web
 python3 kineplex-ui/server.py
 
+# Ou iniciar via kineplex-server em Rust com telemetria ativa:
+cargo run -p kineplex-server
+
 # Acessar no navegador:
 # http://localhost:3000
 ```
+
+#### 🖥️ Telas do Portal de Telemetria e Controle
+
+<p align="center">
+  <img src="docs/images/img-01.png" alt="Portal KinePlex - Visão Geral do Cluster" width="100%" />
+</p>
+<p align="center">
+  <em><strong>Figura 1: Visão Geral do Cluster</strong> — Monitoramento em tempo real dos 20 nós em 4 domínios NUMA, throughput de Spikes Arrow IPC, cauda de latência e injeção de caos com failover atômico.</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/img-02.png" alt="Portal KinePlex - Controle Geométrico e Tensor Métrico" width="100%" />
+</p>
+<p align="center">
+  <em><strong>Figura 2: Controle Geométrico e Plasticidade Topológica</strong> — Projeção no Disco de Poincaré ($\mathbb{D}^2$), Matriz do Tensor Métrico ($20\times 20$), Curvatura de Ollivier-Ricci e Conservação do Invariante de Volume ($V \to 341.28$).</em>
+</p>
+
 A interface web disponibiliza:
 - **Malha Neural Interativa 3D/2D**: Exibição dos nós, partículas de Spikes em trânsito e 2-simplexos triangulares com cálculo do Número de Betti ($\beta_1$).
+- **Controle Geométrico e Variedade Hiperbólica**: Projeção interativa no Disco de Poincaré $\mathbb{D}^2$, heatmap dinâmico da matriz do tensor métrico $g_{ij}$ ($20\times 20$) e gráfico de conservação de volume invariante com clamp anti-overflow.
 - **Injeção de Caos & Plasticidade Sináptica**: Botão interativo para simular falha de nó, observar a transição atômica de `route_epoch` e o reroteamento em tempo real.
 - **Analisador de Curvatura de Forman-Ricci**: Gráficos dinâmicos do amortecimento do passo adaptativo PID ($\varepsilon$).
 - **Submissão de Jobs**: Formulário modal integrado para despachar UDFs Wasm e acompanhar o pipeline em quatro estágios.
