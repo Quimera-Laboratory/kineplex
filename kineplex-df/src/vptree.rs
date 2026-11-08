@@ -6,6 +6,15 @@
 
 use crate::memory::AlignedBuffer;
 
+/// Estatísticas de busca e poda métrica para avaliação de desempenho pós-Banach.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct VpSearchStats {
+    pub dist_evaluations: usize,
+    pub nodes_visited: usize,
+    pub nodes_pruned: usize,
+    pub pruning_ratio: f64,
+}
+
 /// Métrica nos Espaços de Banach $L^p$.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum BanachMetric {
@@ -337,6 +346,121 @@ impl TopologicalVpIndex {
         }
 
         nearest
+    }
+
+    /// Busca $k$-NN coletando telemetria detalhada de poda métrica para avaliação de desempenho.
+    pub fn search_knn_with_stats(&self, query: &[f64], k: usize) -> (Vec<(usize, f64)>, VpSearchStats) {
+        if k == 0 || self.root_idx == NULL_NODE {
+            return (
+                Vec::new(),
+                VpSearchStats {
+                    dist_evaluations: 0,
+                    nodes_visited: 0,
+                    nodes_pruned: 0,
+                    pruning_ratio: 0.0,
+                },
+            );
+        }
+
+        let total_nodes = self.nodes.len();
+        let mut nearest: Vec<(usize, f64)> = Vec::with_capacity(k);
+        let mut tau = f64::INFINITY;
+
+        let mut stack = Vec::with_capacity(64);
+        stack.push(self.root_idx);
+
+        let coords_slice = self.coords.as_slice();
+        let mut dist_evaluations = 0;
+        let mut nodes_visited = 0;
+        let mut nodes_pruned = 0;
+
+        while let Some(curr_idx) = stack.pop() {
+            if curr_idx == NULL_NODE {
+                continue;
+            }
+            nodes_visited += 1;
+            let node = &self.nodes[curr_idx as usize];
+            let pivot = Self::point_slice(coords_slice, self.point_dim, node.point_idx as usize);
+            let dist = self.metric.distance(query, pivot);
+            dist_evaluations += 1;
+
+            if dist < tau {
+                if nearest.len() < k {
+                    nearest.push((node.point_idx as usize, dist));
+                    nearest.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+                    if nearest.len() == k {
+                        tau = nearest.last().unwrap().1;
+                    }
+                } else {
+                    nearest.pop();
+                    nearest.push((node.point_idx as usize, dist));
+                    nearest.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+                    tau = nearest.last().unwrap().1;
+                }
+            }
+
+            let explore_left = node.left_child != NULL_NODE && dist - tau <= node.threshold;
+            let explore_right = node.right_child != NULL_NODE && dist + tau > node.threshold;
+
+            if node.left_child != NULL_NODE && !explore_left {
+                nodes_pruned += 1;
+            }
+            if node.right_child != NULL_NODE && !explore_right {
+                nodes_pruned += 1;
+            }
+
+            // Prioriza ramo mais promissor
+            if dist <= node.threshold {
+                if explore_right { stack.push(node.right_child); }
+                if explore_left { stack.push(node.left_child); }
+            } else {
+                if explore_left { stack.push(node.left_child); }
+                if explore_right { stack.push(node.right_child); }
+            }
+        }
+
+        let pruning_ratio = if total_nodes > 0 {
+            1.0 - (dist_evaluations as f64 / total_nodes as f64)
+        } else {
+            0.0
+        };
+
+        (
+            nearest,
+            VpSearchStats {
+                dist_evaluations,
+                nodes_visited,
+                nodes_pruned,
+                pruning_ratio,
+            },
+        )
+    }
+
+    /// Busca $k$-NN exaustiva (brute-force linear) para validação de aceleração e fidelidade métrica.
+    pub fn search_knn_brute_force(&self, query: &[f64], k: usize) -> (Vec<(usize, f64)>, usize) {
+        if k == 0 || self.nodes.is_empty() {
+            return (Vec::new(), 0);
+        }
+        let n = self.nodes.len();
+        let coords_slice = self.coords.as_slice();
+        let mut nearest: Vec<(usize, f64)> = Vec::with_capacity(k);
+        let mut dist_evals = 0;
+
+        for i in 0..n {
+            let pt = Self::point_slice(coords_slice, self.point_dim, i);
+            let dist = self.metric.distance(query, pt);
+            dist_evals += 1;
+
+            if nearest.len() < k {
+                nearest.push((i, dist));
+                nearest.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+            } else if dist < nearest.last().unwrap().1 {
+                nearest.pop();
+                nearest.push((i, dist));
+                nearest.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+            }
+        }
+        (nearest, dist_evals)
     }
 
     /// Calcula checksum XXH3 simplificado de 64 bits para validação instantânea de integridade.

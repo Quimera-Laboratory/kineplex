@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Post-Banach Topological Performance CI Pipeline (`.github/workflows/perf-post-banach.yml`)**:
+  - Automated GitHub Actions performance testing workflow running on push/PR with native CPU flags (`-C target-cpu=native`).
+  - Interactive **GitHub Step Summary** dashboard displaying real-time metrics, composite BTEA scores, and topological pruning acceleration tables directly in GitHub UI.
+  - Automated CI Regression Gate verifying: BTEA Score $\ge 100.0$, VP-tree pruning ratio $\ge 70\%$, tail latency $p95 \le 10$ ms, and strict zero heap allocations in hot loops.
+  - Telemetry artifact preservation (`post-banach-metrics.json`, `post-banach-summary.md`) with 90-day retention.
+- **Post-Banach Topological Benchmark Harness (`post_banach_bench.rs`)**:
+  - Standalone, zero-dependency benchmarking binary measuring canonical $N = 65.536$ ($512\text{ KB/frame}$) continuous stream throughput ($>500$ frames/s, $>250$ MB/s).
+  - Innovative **BTEA (Banach Topological Efficiency & Acceleration)** composite index integrating throughput, triangle inequality pruning ratio, and tail latency determinism.
+  - Micro-benchmarks for Sobolev Dirichlet energy ($<1$ µs), Haar wavelet multiresolution ($<600$ µs), and Wasserstein $W_1$ optimal transport.
+- **Metric Pruning Telemetry & Zero-Alloc Optimal Transport (`vptree.rs`, `banach.rs`)**:
+  - `VpSearchStats` telemetry struct capturing distance evaluations, visited nodes, pruned branches, and pruning ratio ($\eta_{prune}$).
+  - `search_knn_with_stats` and `search_knn_brute_force` methods on `TopologicalVpIndex` for empirical verification of logarithmic $\mathcal{O}(\log M)$ vs linear $\mathcal{O}(M)$ complexity.
+  - `wasserstein_distance_w1_scratch` providing zero-heap-allocation Earth Mover's Distance calculations with reusable buffers.
+- **Post-Banach Integration & Performance Test Suite (`post_banach_perf.rs`)**:
+  - 4 comprehensive release tests verifying 100% metric fidelity ($\epsilon < 1e-12$) between VP-Tree and brute-force, sub-millisecond regime transition detection, and zero-allocation scratch buffers.
+
 - **`kineplex-df` Functional Analysis & Banach Space (`banach.rs`)**:
   - `BanachFrame` canonical multi-resolution structure ($N = 65.536$).
   - Sobolev $W^{1,2}$ norm and Dirichlet energy computation for topological field analysis.

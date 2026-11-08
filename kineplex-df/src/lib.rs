@@ -59,5 +59,5 @@ pub use sql::{
     avg, col, count, lit, round, sum, when, Column, DataFrame, Row, SparkSession,
 };
 pub use vptree::{
-    BanachMetric, FlatVpNode, TopologicalVpIndex, VpIndexHeader, NULL_NODE, VP_MAGIC,
+    BanachMetric, FlatVpNode, TopologicalVpIndex, VpIndexHeader, VpSearchStats, NULL_NODE, VP_MAGIC,
 };

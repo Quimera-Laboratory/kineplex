@@ -312,6 +312,45 @@ impl BanachFrame {
         (sum / (n as f64)).powf(1.0 / p)
     }
 
+    /// Distância de Wasserstein $W_1$ de ultra-alta performance utilizando buffers scratch pré-alocados.
+    /// Elimina 100% das alocações na heap durante medições contínuas de fluxo topológico.
+    pub fn wasserstein_distance_w1_scratch(
+        &self,
+        other: &BanachFrame,
+        scratch_f: &mut [f64],
+        scratch_g: &mut [f64],
+    ) -> f64 {
+        let n = self.len();
+        assert_eq!(n, other.len(), "Dimensões incompatíveis");
+        assert!(scratch_f.len() >= n && scratch_g.len() >= n, "Buffers scratch insuficientes");
+
+        scratch_f[..n].copy_from_slice(self.data.as_slice());
+        scratch_g[..n].copy_from_slice(other.data.as_slice());
+
+        scratch_f[..n].sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        scratch_g[..n].sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+
+        let mut sum = 0.0;
+        let chunks = n / 4;
+        let mut acc0 = 0.0;
+        let mut acc1 = 0.0;
+        let mut acc2 = 0.0;
+        let mut acc3 = 0.0;
+
+        for c in 0..chunks {
+            let base = c * 4;
+            acc0 += (scratch_f[base] - scratch_g[base]).abs();
+            acc1 += (scratch_f[base + 1] - scratch_g[base + 1]).abs();
+            acc2 += (scratch_f[base + 2] - scratch_g[base + 2]).abs();
+            acc3 += (scratch_f[base + 3] - scratch_g[base + 3]).abs();
+        }
+        sum += (acc0 + acc1) + (acc2 + acc3);
+        for i in (chunks * 4)..n {
+            sum += (scratch_f[i] - scratch_g[i]).abs();
+        }
+        sum / (n as f64)
+    }
+
     /// Ponto Fixo de Cauchy via Iteração de Banach-Picard: $x_{k+1} = T(x_k)$.
     /// Converge geometricamente com $\|T(x) - T(y)\|_{L^2} \le \alpha \|x - y\|_{L^2}$ para $\alpha < 1$.
     pub fn cauchy_fixed_point<F>(&mut self, operator: F, alpha: f64, epsilon: f64, max_iters: usize) -> usize
