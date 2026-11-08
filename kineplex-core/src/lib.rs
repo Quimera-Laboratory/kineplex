@@ -10,6 +10,9 @@ pub mod wasm;
 pub mod graph;
 pub mod data;
 pub mod metrics;
+pub mod job_metrics;
+pub mod job_registry;
+pub mod budget;
 pub mod error;
 pub mod geometry;
 
