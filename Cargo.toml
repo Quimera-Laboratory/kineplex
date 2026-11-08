@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "kineplex-core",
+    "kineplex-df",
     "kineplex-net",
     "kineplex-node",
     "kineplex-sdk",
@@ -33,6 +34,9 @@ debug = true
 [workspace.dependencies]
 # Core
 kineplex-core = { path = "kineplex-core", version = "0.1.0" }
+
+# Columnar DataFrame / SQL engine
+kineplex-df = { path = "kineplex-df", version = "0.1.0" }
 
 # Networking
 kineplex-net = { path = "kineplex-net", version = "0.1.0" }
