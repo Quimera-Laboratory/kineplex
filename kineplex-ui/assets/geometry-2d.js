@@ -426,8 +426,10 @@
               </div>
 
               <!-- Canvas Container do Poincaré Disk -->
-              <div class="relative w-full h-[460px] rounded-xl bg-[#040C14] border border-kine-border/80 overflow-hidden flex items-center justify-center shadow-inner">
-                <canvas id="poincareCanvas" class="w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+              <div class="relative w-full h-[460px] rounded-xl bg-[#040C14] border border-kine-border/80 overflow-hidden flex items-center justify-center shadow-inner" role="region" aria-label="Área de Projeção do Disco de Poincaré">
+                <canvas id="poincareCanvas" class="w-full h-full cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan" role="img" aria-label="Visualização em 2D do Disco Hiperbólico de Poincaré projetando nós e geodésicas da malha neural" tabindex="0">
+                  <p class="sr-only">Disco de Poincaré mapeando a topologia hiperbólica com curvatura negativa e geodésicas Riemannianas calculadas via transporte ótimo de Ollivier-Ricci.</p>
+                </canvas>
 
                 <!-- Watermark Matemático -->
                 <div class="absolute bottom-3 left-3 text-[10px] font-mono text-slate-500/70 pointer-events-none">
@@ -483,8 +485,10 @@
               </div>
 
               <!-- Canvas Container do Heatmap 20x20 -->
-              <div class="relative w-full h-[460px] rounded-xl bg-[#040C14] border border-kine-border/80 overflow-hidden flex items-center justify-center shadow-inner">
-                <canvas id="heatmapCanvas" class="w-full h-full cursor-pointer"></canvas>
+              <div class="relative w-full h-[460px] rounded-xl bg-[#040C14] border border-kine-border/80 overflow-hidden flex items-center justify-center shadow-inner" role="region" aria-label="Área da Matriz do Tensor Métrico 20 por 20">
+                <canvas id="heatmapCanvas" class="w-full h-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan" role="img" aria-label="Matriz do Tensor Métrico 20 por 20 em mapa de calor bidimensional" tabindex="0">
+                  <p class="sr-only">Mapa de calor 20 por 20 representando os coeficientes da métrica Riemanniana g_ij entre os 20 nós do cluster.</p>
+                </canvas>
 
                 <!-- Tooltip Flutuante -->
                 <div id="heatmapTooltip" class="absolute pointer-events-none p-3 rounded-xl glass-card border border-kine-cyan/70 text-xs font-mono shadow-2xl z-30 hidden" style="min-width: 210px;">

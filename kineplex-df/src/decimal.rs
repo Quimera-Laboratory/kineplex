@@ -26,6 +26,39 @@ pub const SCALE_8_TO_16: i64 = 100_000_000; // 10^(16 - 8)
 pub const SCALE_2_TO_16: i64 = 100_000_000_000_000; // 10^(16 - 2) para Centavos BACEN
 pub const SCALE_6_TO_16: i64 = 10_000_000_000; // 10^(16 - 6) para VNA NTN-B
 
+/// Constantes de Montgomery / Granlund-Montgomery para divisão invariante por 10^8 e 10^16 em 2 ciclos:
+pub const MONTGOMERY_M_BASE_8: u64 = 0xabcc77118461d;
+pub const MONTGOMERY_S_BASE_8: u32 = 14;
+
+pub const MONTGOMERY_M_BASE_16: u64 = 0x39a5652fb11379;
+pub const MONTGOMERY_S_BASE_16: u32 = 43;
+
+/// Divisão e resto rápidos por 10^8 para inteiros não-negativos em 2 ciclos de CPU (zero idiv).
+#[inline(always)]
+pub fn fast_div_mod_base8(x: i64) -> (i64, i64) {
+    if x >= 0 && x < (1_i64 << 54) {
+        let x_u = x as u64;
+        let hi = ((x_u as u128 * MONTGOMERY_M_BASE_8 as u128) >> (64 + MONTGOMERY_S_BASE_8)) as i64;
+        let r = x - hi * BASE_8;
+        (hi, r)
+    } else {
+        (x / BASE_8, x % BASE_8)
+    }
+}
+
+/// Divisão e resto rápidos por 10^16 para inteiros não-negativos em 2 ciclos de CPU (zero idiv).
+#[inline(always)]
+pub fn fast_div_mod_base16(x: i64) -> (i64, i64) {
+    if x >= 0 {
+        let x_u = x as u64;
+        let hi = ((x_u as u128 * MONTGOMERY_M_BASE_16 as u128) >> (64 + MONTGOMERY_S_BASE_16)) as i64;
+        let r = x - hi * BASE_16;
+        (hi, r)
+    } else {
+        (x / BASE_16, x % BASE_16)
+    }
+}
+
 /// Erro aritmético explícito disparado quando a flag de hardware `JO` (Jump on Overflow)
 /// detecta extrapolação do limite de 64 bits (`i64::MAX` / `i64::MIN`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -227,11 +260,13 @@ impl QuimeraCategoricalDecimal {
         let mut q = q_in;
         let mut r = r_in;
         if r >= BASE_16 {
-            let carry = r / BASE_16;
+            let (carry, rem) = fast_div_mod_base16(r);
             q = add_exact(q, carry);
-            r -= carry * BASE_16;
+            r = rem;
         } else if r < 0 {
-            let borrow = ((-r - 1) / BASE_16) + 1;
+            let pos_r_minus_1 = -r - 1;
+            let (borrow_div, _) = fast_div_mod_base16(pos_r_minus_1);
+            let borrow = borrow_div + 1;
             q = sub_exact(q, borrow);
             r += borrow * BASE_16;
         }

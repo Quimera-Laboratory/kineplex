@@ -114,19 +114,91 @@
     .animate-pulse-slow {
       animation: pulse-slow 3s infinite ease-in-out;
     }
+
+    /* ============================================================== */
+    /* ACESSIBILIDADE WCAG 2.2 AA                                     */
+    /* ============================================================== */
+
+    /* Anéis de Foco Visíveis com Alto Contraste (Critério 2.4.7 e 2.4.11) */
+    :focus-visible {
+      outline: 2px solid #00F0FF !important;
+      outline-offset: 2px !important;
+      box-shadow: 0 0 0 4px rgba(0, 167, 167, 0.45) !important;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    select:focus-visible,
+    input:focus-visible,
+    [role="button"]:focus-visible,
+    [role="tab"]:focus-visible {
+      outline: 2px solid #00F0FF !important;
+      outline-offset: 2px !important;
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.7) !important;
+    }
+
+    /* Classe utilitária sr-only para leitores de tela */
+    .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
+    .focus\:not-sr-only:focus {
+      position: fixed !important;
+      width: auto !important;
+      height: auto !important;
+      padding: 0.75rem 1.25rem !important;
+      margin: 0 !important;
+      overflow: visible !important;
+      clip: auto !important;
+      white-space: normal !important;
+      z-index: 99999 !important;
+    }
+
+    /* Suporte a Prefers-Reduced-Motion (Critério 2.2.2 e 2.3.3) */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+      }
+      .animate-ping,
+      .animate-pulse,
+      .animate-pulse-slow {
+        animation: none !important;
+      }
+    }
   </style>
 </head>
 <body class="font-sans antialiased overflow-x-hidden">
 
+  <!-- Skip Link Acessível WCAG 2.2 AA (Critério 2.4.1 Bypass Blocks) -->
+  <a href="#main-content" class="sr-only focus:not-sr-only top-4 left-4 bg-kine-cyan text-black font-mono font-bold rounded-lg shadow-2xl border-2 border-white ring-4 ring-kine-neon">
+    Pular para o conteúdo principal (Skip to Main Content)
+  </a>
+
+  <!-- Live Announcer Global para Leitores de Tela (Critério 4.1.3 Status Messages) -->
+  <div id="sr-announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
   <!-- ============================================================== -->
   <!-- TOPBAR / HEADER GLOBAL                                         -->
   <!-- ============================================================== -->
-  <header class="sticky top-0 z-50 glass-panel border-b border-kine-border/60 px-6 py-3">
+  <header class="sticky top-0 z-50 glass-panel border-b border-kine-border/60 px-6 py-3" role="banner" aria-label="Cabeçalho Global e Telemetria do Cluster">
     <div class="max-w-[1720px] mx-auto flex items-center justify-between flex-wrap gap-4">
       
       <!-- Brand & Identity -->
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-kine-cyan to-kine-blue flex items-center justify-center glow-cyan">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-kine-cyan to-kine-blue flex items-center justify-center glow-cyan" aria-hidden="true">
           <i data-lucide="network" class="w-6 h-6 text-black font-bold"></i>
         </div>
         <div>
@@ -139,41 +211,41 @@
       </div>
 
       <!-- Live Cluster Pills -->
-      <div class="flex items-center space-x-3 text-xs font-mono">
+      <div class="flex items-center space-x-3 text-xs font-mono" role="region" aria-label="Indicadores de Estado Global do Cluster">
         <!-- Status Pill -->
-        <div id="cluster-status-pill" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-400">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <div id="cluster-status-pill" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-400" role="status" aria-live="polite" aria-label="Status do cluster: 20 nós operacionais">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping" aria-hidden="true"></span>
           <span class="font-semibold uppercase tracking-wider">20 NODES OPERATIONAL</span>
         </div>
 
         <!-- Route Epoch -->
-        <div class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-kine-surface border border-kine-border text-slate-300">
-          <i data-lucide="git-branch" class="w-3.5 h-3.5 text-kine-neon"></i>
+        <div class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-kine-surface border border-kine-border text-slate-300" role="status" aria-label="Época de rota ativa: 14">
+          <i data-lucide="git-branch" class="w-3.5 h-3.5 text-kine-neon" aria-hidden="true"></i>
           <span>ROUTE EPOCH: <strong id="val-route-epoch" class="text-white">14</strong></span>
         </div>
 
         <!-- Betti Number -->
-        <div class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-kine-surface border border-kine-border text-slate-300">
-          <i data-lucide="triangle" class="w-3.5 h-3.5 text-kine-cyan"></i>
+        <div class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-kine-surface border border-kine-border text-slate-300" role="status" aria-label="Número de Betti beta 1: 3 faces">
+          <i data-lucide="triangle" class="w-3.5 h-3.5 text-kine-cyan" aria-hidden="true"></i>
           <span>BETTI (β₁): <strong id="val-betti-num" class="text-kine-neon">3</strong> FACES</span>
         </div>
 
         <!-- Warm-up & Volume -->
-        <div class="hidden lg:flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-kine-surface border border-kine-border text-slate-300">
-          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <div class="hidden lg:flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-kine-surface border border-kine-border text-slate-300" role="status" aria-label="Invariante de volume: 341.28">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400" aria-hidden="true"></i>
           <span>VOL INVARIANT: <strong class="text-emerald-400">341.28</strong></span>
         </div>
       </div>
 
       <!-- Action Buttons & Navigation -->
-      <div class="flex items-center space-x-3">
+      <div class="flex items-center space-x-3" role="toolbar" aria-label="Ações Rápidas do Cluster">
         <!-- Run 20-Node Simulation Button with Row Count Option -->
         <div class="flex items-center rounded-lg bg-emerald-950/60 border border-emerald-500/40 overflow-hidden shadow-sm">
-          <button id="btn-simulate" onclick="runRealClusterSimulation()" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-mono hover:bg-emerald-900/80 text-emerald-300 transition">
-            <i data-lucide="play" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <button id="btn-simulate" onclick="runRealClusterSimulation()" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-mono hover:bg-emerald-900/80 text-emerald-300 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400" aria-label="Executar simulação distribuída em 20 nós">
+            <i data-lucide="play" class="w-3.5 h-3.5 text-emerald-400" aria-hidden="true"></i>
             <span id="btn-sim-label">Simular 20 Nós</span>
           </button>
-          <select id="sim-row-count" title="Volume de Linhas" class="bg-black/60 text-emerald-300 text-xs font-mono px-2 py-1.5 border-l border-emerald-500/30 focus:outline-none cursor-pointer">
+          <select id="sim-row-count" title="Volume de Linhas" aria-label="Volume de linhas para simulação" class="bg-black/60 text-emerald-300 text-xs font-mono px-2 py-1.5 border-l border-emerald-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 cursor-pointer">
             <option value="500000" selected>500k linhas</option>
             <option value="1000000">1M linhas</option>
           </select>
@@ -181,18 +253,18 @@
 
         <!-- Chaos / Failover Selector Dropdown & Button -->
         <div class="flex items-center rounded-lg bg-rose-950/50 border border-rose-500/40 overflow-hidden shadow-sm">
-          <select id="chaos-target-node" onchange="updateChaosButtonLabel()" title="Selecione o Nó para Caos/Failover" class="bg-black/60 text-rose-300 text-xs font-mono px-2 py-1.5 border-r border-rose-500/30 focus:outline-none cursor-pointer">
+          <select id="chaos-target-node" onchange="updateChaosButtonLabel()" title="Selecione o Nó para Caos/Failover" aria-label="Selecionar nó alvo para injeção de falha ou caos" class="bg-black/60 text-rose-300 text-xs font-mono px-2 py-1.5 border-r border-rose-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 cursor-pointer">
             <option value="kpx-node-02">kpx-node-02 (Receptor)</option>
           </select>
-          <button id="btn-chaos" onclick="toggleChaosSimulation()" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-mono hover:bg-rose-900/60 text-rose-300 transition">
-            <i data-lucide="zap-off" class="w-3.5 h-3.5 text-rose-400"></i>
+          <button id="btn-chaos" onclick="toggleChaosSimulation()" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-mono hover:bg-rose-900/60 text-rose-300 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400" aria-label="Injetar falha de caos no nó selecionado">
+            <i data-lucide="zap-off" class="w-3.5 h-3.5 text-rose-400" aria-hidden="true"></i>
             <span id="btn-chaos-label">Injetar Caos</span>
           </button>
         </div>
 
         <!-- Submit New Job Button -->
-        <button onclick="openSubmitModal()" class="flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider bg-gradient-to-r from-kine-cyan to-sky-500 hover:from-kine-neon hover:to-sky-400 text-black font-mono shadow-lg shadow-kine-cyan/25 transition transform active:scale-95">
-          <i data-lucide="plus-circle" class="w-4 h-4 text-black"></i>
+        <button id="btn-open-submit-modal" onclick="openSubmitModal()" aria-haspopup="dialog" aria-expanded="false" aria-label="Abrir formulário para submeter novo grafo distribuído" class="flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider bg-gradient-to-r from-kine-cyan to-sky-500 hover:from-kine-neon hover:to-sky-400 text-black font-mono shadow-lg shadow-kine-cyan/25 transition transform active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-black" aria-hidden="true"></i>
           <span>Submeter Job</span>
         </button>
       </div>
@@ -200,55 +272,59 @@
     </div>
 
     <!-- Navigation Tabs Bar -->
-    <div class="max-w-[1720px] mx-auto mt-3 pt-2 border-t border-kine-border/40 flex items-center space-x-6 text-sm">
-      <button onclick="switchTab('tab-overview')" id="nav-tab-overview" class="nav-tab-btn flex items-center space-x-2 pb-1 border-b-2 border-kine-neon text-kine-neon font-medium">
-        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-        <span>Topologia & Overview</span>
-      </button>
+    <nav class="max-w-[1720px] mx-auto mt-3 pt-2 border-t border-kine-border/40" role="navigation" aria-label="Navegação Principal do Painel">
+      <div role="tablist" aria-label="Seções do KinePlex" class="flex items-center space-x-6 text-sm">
+        <button onclick="switchTab('tab-overview')" id="nav-tab-overview" role="tab" aria-selected="true" aria-controls="tab-overview" tabindex="0" class="nav-tab-btn flex items-center space-x-2 pb-1 border-b-2 border-kine-neon text-kine-neon font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
+          <i data-lucide="layout-dashboard" class="w-4 h-4" aria-hidden="true"></i>
+          <span>Topologia &amp; Overview</span>
+        </button>
 
-      <button onclick="switchTab('tab-geometric')" id="nav-tab-geometric" class="nav-tab-btn flex items-center space-x-2 pb-1 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-medium transition">
-        <i data-lucide="activity" class="w-4 h-4"></i>
-        <span>Controle Geométrico (Ricci & PID)</span>
-      </button>
+        <button onclick="switchTab('tab-geometric')" id="nav-tab-geometric" role="tab" aria-selected="false" aria-controls="tab-geometric" tabindex="-1" class="nav-tab-btn flex items-center space-x-2 pb-1 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
+          <i data-lucide="activity" class="w-4 h-4" aria-hidden="true"></i>
+          <span>Controle Geométrico (Ricci &amp; PID)</span>
+        </button>
 
-      <button onclick="switchTab('tab-pipeline')" id="nav-tab-pipeline" class="nav-tab-btn flex items-center space-x-2 pb-1 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-medium transition">
-        <i data-lucide="workflow" class="w-4 h-4"></i>
-        <span>Pipeline E2E & Arrow Streams</span>
-      </button>
+        <button onclick="switchTab('tab-pipeline')" id="nav-tab-pipeline" role="tab" aria-selected="false" aria-controls="tab-pipeline" tabindex="-1" class="nav-tab-btn flex items-center space-x-2 pb-1 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
+          <i data-lucide="workflow" class="w-4 h-4" aria-hidden="true"></i>
+          <span>Pipeline E2E &amp; Arrow Streams</span>
+        </button>
 
-      <button onclick="switchTab('tab-figma')" id="nav-tab-figma" class="nav-tab-btn flex items-center space-x-2 pb-1 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-medium transition">
-        <i data-lucide="figma" class="w-4 h-4"></i>
-        <span>Figma Design System & Mockups</span>
-      </button>
-    </div>
+        <button onclick="switchTab('tab-figma')" id="nav-tab-figma" role="tab" aria-selected="false" aria-controls="tab-figma" tabindex="-1" class="nav-tab-btn flex items-center space-x-2 pb-1 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
+          <i data-lucide="figma" class="w-4 h-4" aria-hidden="true"></i>
+          <span>Figma Design System &amp; Mockups</span>
+        </button>
+      </div>
+    </nav>
   </header>
 
 
   <!-- ============================================================== -->
   <!-- CONTEÚDO PRINCIPAL (TABS)                                      -->
   <!-- ============================================================== -->
-  <main class="max-w-[1720px] mx-auto p-6 space-y-6">
+  <main id="main-content" tabindex="-1" class="max-w-[1720px] mx-auto p-6 space-y-6 focus:outline-none" role="main" aria-label="Conteúdo Principal do KinePlex">
 
     <!-- ============================================================ -->
     <!-- TAB 1: OVERVIEW & NEURAL MESH TOPOLOGY                      -->
     <!-- ============================================================ -->
-    <div id="tab-overview" class="tab-content space-y-6">
+    <div id="tab-overview" class="tab-content space-y-6" role="tabpanel" aria-labelledby="nav-tab-overview" tabindex="0">
       
       <!-- Top Metrics Banner Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section aria-label="Métricas de Desempenho e Vazão do Cluster" role="region" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         <!-- Metric 1: Spike Throughput -->
         <div class="glass-card rounded-xl p-4 border border-kine-border relative overflow-hidden">
           <div class="flex items-center justify-between text-xs text-slate-400 font-mono">
             <span>SPIKE THROUGHPUT</span>
-            <span class="text-kine-neon flex items-center"><i data-lucide="arrow-up-right" class="w-3.5 h-3.5 mr-0.5"></i> +8.4%</span>
+            <span class="text-kine-neon flex items-center"><i data-lucide="arrow-up-right" class="w-3.5 h-3.5 mr-0.5" aria-hidden="true"></i> +8.4%</span>
           </div>
           <div class="mt-2 flex items-baseline justify-between">
             <span id="metric-spike-rate" class="text-2xl font-bold font-mono text-white glow-text">1.24 M<span class="text-sm text-slate-400 font-normal">/s</span></span>
             <span class="text-xs px-2 py-0.5 rounded bg-kine-cyan/20 text-kine-neon font-mono">Spiking Dataflow</span>
           </div>
           <div class="mt-3 h-10">
-            <canvas id="chart-spike-mini"></canvas>
+            <canvas id="chart-spike-mini" role="img" aria-label="Histórico de taxa de spikes por segundo (1.24 M/s)">
+              <p class="sr-only">Gráfico de linha de taxa de spikes registrando 1.24M spikes por segundo.</p>
+            </canvas>
           </div>
         </div>
 
@@ -256,14 +332,16 @@
         <div class="glass-card rounded-xl p-4 border border-kine-border relative overflow-hidden">
           <div class="flex items-center justify-between text-xs text-slate-400 font-mono">
             <span>ARROW IPC BANDWIDTH</span>
-            <span class="text-emerald-400 flex items-center"><i data-lucide="check" class="w-3.5 h-3.5 mr-0.5"></i> Zero-Copy</span>
+            <span class="text-emerald-400 flex items-center"><i data-lucide="check" class="w-3.5 h-3.5 mr-0.5" aria-hidden="true"></i> Zero-Copy</span>
           </div>
           <div class="mt-2 flex items-baseline justify-between">
             <span id="metric-arrow-bw" class="text-2xl font-bold font-mono text-white">42.8 <span class="text-sm text-slate-400 font-normal">GB/s</span></span>
             <span class="text-xs px-2 py-0.5 rounded bg-sky-950 text-sky-300 font-mono">100 GbE QUIC</span>
           </div>
           <div class="mt-3 h-10">
-            <canvas id="chart-arrow-mini"></canvas>
+            <canvas id="chart-arrow-mini" role="img" aria-label="Histórico de largura de banda Arrow IPC (42.8 GB/s)">
+              <p class="sr-only">Gráfico de linha de vazão Arrow IPC registrando 42.8 GB/s Zero-Copy.</p>
+            </canvas>
           </div>
         </div>
 
@@ -278,7 +356,9 @@
             <span class="text-xs px-2 py-0.5 rounded bg-purple-950 text-purple-300 font-mono">Cranelift JIT</span>
           </div>
           <div class="mt-3 h-10">
-            <canvas id="chart-wasm-mini"></canvas>
+            <canvas id="chart-wasm-mini" role="img" aria-label="Histórico de latência Wasm P95 (1.38 ms)">
+              <p class="sr-only">Gráfico de linha de latência Wasm P95 registrando 1.38 milissegundos.</p>
+            </canvas>
           </div>
         </div>
 
@@ -298,42 +378,44 @@
           </div>
         </div>
 
-      </div>
+      </section>
 
       <!-- Main Central Section: 2D/3D Neural Mesh Topology + Active Nodes List -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         <!-- Live Neural Mesh Canvas (8 Cols) -->
-        <div class="lg:col-span-8 glass-panel rounded-2xl p-5 border border-kine-border relative flex flex-col">
+        <section class="lg:col-span-8 glass-panel rounded-2xl p-5 border border-kine-border relative flex flex-col" role="region" aria-label="Malha Neural Interativa e Grafo Vivo">
           <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
             <div>
               <h2 class="text-base font-bold text-white flex items-center space-x-2">
-                <i data-lucide="share-2" class="w-5 h-5 text-kine-neon"></i>
+                <i data-lucide="share-2" class="w-5 h-5 text-kine-neon" aria-hidden="true"></i>
                 <span>Malha Neural Interativa & Grafo Vivo</span>
               </h2>
               <p class="text-xs text-slate-400 mt-0.5">Topologia P2P em tempo real com propagação de Spikes sobre streams QUIC e deformação por curvatura</p>
             </div>
             
             <!-- Controls Toolbar -->
-            <div class="flex items-center space-x-2 text-xs font-mono">
-              <button onclick="resetMeshCamera()" class="px-2.5 py-1 rounded bg-kine-card hover:bg-kine-cardhover border border-kine-border text-slate-300 transition">
+            <div class="flex items-center space-x-2 text-xs font-mono" role="toolbar" aria-label="Controles da Malha Neural">
+              <button onclick="resetMeshCamera()" aria-label="Redefinir visualização da câmera da malha neural" class="px-2.5 py-1 rounded bg-kine-card hover:bg-kine-cardhover border border-kine-border text-slate-300 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
                 Reset Visão
               </button>
-              <button onclick="toggleParticles()" id="btn-toggle-particles" class="px-2.5 py-1 rounded bg-kine-cyan/20 border border-kine-cyan/50 text-kine-neon transition">
+              <button onclick="toggleParticles()" id="btn-toggle-particles" aria-label="Alternar partículas de spikes na malha neural" aria-pressed="true" class="px-2.5 py-1 rounded bg-kine-cyan/20 border border-kine-cyan/50 text-kine-neon transition focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
                 Spikes: ON
               </button>
-              <button onclick="toggle2SimplexFaces()" id="btn-toggle-simplex" class="px-2.5 py-1 rounded bg-purple-900/30 border border-purple-500/50 text-purple-300 transition">
+              <button onclick="toggle2SimplexFaces()" id="btn-toggle-simplex" aria-label="Alternar renderização de faces de 2-simplexos" aria-pressed="true" class="px-2.5 py-1 rounded bg-purple-900/30 border border-purple-500/50 text-purple-300 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400">
                 2-Simplexos (Faces): ON
               </button>
             </div>
           </div>
 
           <!-- Interactive Canvas Container -->
-          <div class="relative w-full h-[520px] rounded-xl bg-kine-deep/80 border border-kine-border/60 overflow-hidden">
-            <canvas id="neuralMeshCanvas" class="w-full h-full cursor-crosshair"></canvas>
+          <div class="relative w-full h-[520px] rounded-xl bg-kine-deep/80 border border-kine-border/60 overflow-hidden" role="region" aria-label="Área Gráfica da Malha Neural">
+            <canvas id="neuralMeshCanvas" class="w-full h-full cursor-crosshair focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan" role="img" aria-label="Malha Neural Interativa com 20 nós, 34 arestas e faces de 2-simplexos. Navegue pela lista de nós adjacente para inspecionar cada nó via teclado." tabindex="0">
+              <p class="sr-only">Topologia de malha neural 2D interativa exibindo 20 nós heterogêneos distribuídos em 4 domínios NUMA, conectados por 34 conexões QUIC com fluxo contínuo de spikes.</p>
+            </canvas>
             
             <!-- Floating Overlay Tooltip for Selected Node -->
-            <div id="node-inspector-overlay" class="absolute bottom-4 left-4 p-4 rounded-xl glass-card border border-kine-cyan/50 text-xs font-mono max-w-sm hidden shadow-2xl z-20">
+            <div id="node-inspector-overlay" class="absolute bottom-4 left-4 p-4 rounded-xl glass-card border border-kine-cyan/50 text-xs font-mono max-w-sm hidden shadow-2xl z-20" role="region" aria-live="polite" aria-atomic="true" aria-label="Painel de Inspeção do Nó Selecionado">
               <div class="flex items-center justify-between border-b border-kine-border/60 pb-2 mb-2">
                 <span id="inspect-node-id" class="font-bold text-kine-neon text-sm">Node ID</span>
                 <span id="inspect-node-status" class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px]">READY</span>
@@ -350,44 +432,44 @@
             </div>
 
             <!-- Legend Overlay -->
-            <div class="absolute top-4 right-4 bg-kine-surface/90 border border-kine-border p-3 rounded-lg text-[11px] font-mono space-y-1.5 shadow-lg backdrop-blur z-10">
+            <div class="absolute top-4 right-4 bg-kine-surface/90 border border-kine-border p-3 rounded-lg text-[11px] font-mono space-y-1.5 shadow-lg backdrop-blur z-10" aria-label="Legenda dos nós e conexões">
               <div class="flex items-center space-x-2">
-                <span class="w-3 h-3 rounded-full bg-purple-400 shadow-sm shadow-purple-500/50"></span>
+                <span class="w-3 h-3 rounded-full bg-purple-400 shadow-sm shadow-purple-500/50" aria-hidden="true"></span>
                 <span>Semeador / Ingress (4)</span>
               </div>
               <div class="flex items-center space-x-2">
-                <span class="w-3 h-3 rounded-full bg-kine-cyan shadow-sm shadow-kine-cyan"></span>
+                <span class="w-3 h-3 rounded-full bg-kine-cyan shadow-sm shadow-kine-cyan" aria-hidden="true"></span>
                 <span>Compute SIMD (6)</span>
               </div>
               <div class="flex items-center space-x-2">
-                <span class="w-3 h-3 rounded-full bg-amber-400 shadow-sm shadow-amber-500/50"></span>
+                <span class="w-3 h-3 rounded-full bg-amber-400 shadow-sm shadow-amber-500/50" aria-hidden="true"></span>
                 <span>Aggregation Master (3)</span>
               </div>
               <div class="flex items-center space-x-2">
-                <span class="w-3 h-3 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50"></span>
+                <span class="w-3 h-3 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50" aria-hidden="true"></span>
                 <span>Terminal Parquet (3)</span>
               </div>
               <div class="flex items-center space-x-2">
-                <span class="w-3 h-3 rounded-full bg-slate-400"></span>
+                <span class="w-3 h-3 rounded-full bg-slate-400" aria-hidden="true"></span>
                 <span>Hot Standby / Relay (4)</span>
               </div>
               <div class="flex items-center space-x-2">
-                <span class="w-3 h-3 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50"></span>
+                <span class="w-3 h-3 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50" aria-hidden="true"></span>
                 <span>Nó com Falha (Quarentena)</span>
               </div>
               <div class="flex items-center space-x-2">
-                <span class="w-4 h-0.5 bg-gradient-to-r from-kine-cyan to-transparent"></span>
+                <span class="w-4 h-0.5 bg-gradient-to-r from-kine-cyan to-transparent" aria-hidden="true"></span>
                 <span>Stream QUIC (34 Sinapses)</span>
               </div>
               <div class="flex items-center space-x-2">
-                <span class="w-3 h-2 bg-kine-cyan/20 border border-kine-cyan/40"></span>
+                <span class="w-3 h-2 bg-kine-cyan/20 border border-kine-cyan/40" aria-hidden="true"></span>
                 <span>2-Simplexo (Face Homológica)</span>
               </div>
             </div>
           </div>
 
           <!-- Bottom Topology Telemetry Bar -->
-          <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono text-slate-400">
+          <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono text-slate-400" role="region" aria-label="Telemetria Topológica da Malha">
             <div class="p-2.5 rounded-lg bg-kine-surface/60 border border-kine-border/60">
               <span class="text-[10px] block text-slate-500">NÓS NO GOSSIP</span>
               <strong id="stat-total-nodes" class="text-white text-sm">20 Nós Homogêneos</strong>
@@ -405,30 +487,31 @@
               <strong class="text-white text-sm">PID Epsilon Auto</strong>
             </div>
           </div>
-        </div>
+        </section>
 
         <!-- Active Nodes Roster (4 Cols) -->
-        <div class="lg:col-span-4 glass-panel rounded-2xl p-5 border border-kine-border flex flex-col">
+        <aside class="lg:col-span-4 glass-panel rounded-2xl p-5 border border-kine-border flex flex-col" role="region" aria-label="Nós do Cluster e Telemetria de Hardware">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-base font-bold text-white flex items-center space-x-2">
-              <i data-lucide="server" class="w-5 h-5 text-kine-neon"></i>
+              <i data-lucide="server" class="w-5 h-5 text-kine-neon" aria-hidden="true"></i>
               <span>Nós do Cluster</span>
             </h2>
-            <span id="stat-healthy-badge" class="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 font-mono">20/20 Saudáveis</span>
+            <span id="stat-healthy-badge" class="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 font-mono" role="status">20/20 Saudáveis</span>
           </div>
           <p class="text-xs text-slate-400 mb-4">Telemetria periódica via Gossip/SWIM &amp; Kernel UAPI</p>
 
           <!-- Search & Filter -->
           <div class="relative mb-3">
-            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
-            <input type="text" id="node-search" placeholder="Filtrar por nó, NUMA ou papel..." class="w-full pl-9 pr-3 py-1.5 rounded-lg bg-kine-surface/80 border border-kine-border text-xs text-white placeholder-slate-500 focus:outline-none focus:border-kine-neon font-mono">
+            <label for="node-search" class="sr-only">Filtrar nós do cluster por nome, NUMA ou papel</label>
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" aria-hidden="true"></i>
+            <input type="text" id="node-search" placeholder="Filtrar por nó, NUMA ou papel..." aria-label="Filtrar nós por identificador, NUMA ou papel" class="w-full pl-9 pr-3 py-1.5 rounded-lg bg-kine-surface/80 border border-kine-border text-xs text-white placeholder-slate-500 focus:outline-none focus:border-kine-neon focus-visible:ring-2 focus-visible:ring-kine-cyan font-mono">
           </div>
 
           <!-- Nodes Scroll List -->
-          <div id="nodes-roster-container" class="space-y-2.5 overflow-y-auto pr-1 flex-1 max-h-[480px]">
+          <div id="nodes-roster-container" class="space-y-2.5 overflow-y-auto pr-1 flex-1 max-h-[480px]" role="region" aria-label="Lista de nós ativos do cluster">
             <!-- Node items injected dynamically by JS -->
           </div>
-        </div>
+        </aside>
 
       </div>
 
@@ -438,14 +521,14 @@
     <!-- ============================================================ -->
     <!-- TAB 2: GEOMETRIC CONTROL & RICCI FLOW (PRANCHA 2 FIGMA)     -->
     <!-- ============================================================ -->
-    <div id="tab-geometric" class="tab-content space-y-6 hidden">
+    <div id="tab-geometric" class="tab-content space-y-6 hidden" role="tabpanel" aria-labelledby="nav-tab-geometric" tabindex="0">
 
       <!-- Top Control Bar (Figma Prancha 2 Header) -->
-      <div class="glass-panel rounded-2xl p-4 border border-kine-border flex items-center justify-between flex-wrap gap-4">
+      <section class="glass-panel rounded-2xl p-4 border border-kine-border flex items-center justify-between flex-wrap gap-4" role="region" aria-label="Barra de Controles do Fluxo de Ricci">
         
         <!-- Left: Branding & Subtitle -->
         <div class="flex items-center space-x-3.5">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-kine-cyan to-kine-blue flex items-center justify-center glow-cyan">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-kine-cyan to-kine-blue flex items-center justify-center glow-cyan" aria-hidden="true">
             <i data-lucide="orbit" class="w-6 h-6 text-black font-bold"></i>
           </div>
           <div>
@@ -459,61 +542,61 @@
         </div>
 
         <!-- Center: Flow Controls & Mode Dropdown -->
-        <div class="flex items-center space-x-3 text-xs font-mono">
+        <div class="flex items-center space-x-3 text-xs font-mono" role="toolbar" aria-label="Controles do Fluxo Geométrico">
           <div class="relative">
-            <select id="select-ricci-mode" class="px-3 py-1.5 rounded-lg bg-kine-surface border border-kine-cyan/50 text-kine-neon focus:outline-none cursor-pointer">
+            <select id="select-ricci-mode" aria-label="Selecione o modo da métrica de curvatura de Ricci" class="px-3 py-1.5 rounded-lg bg-kine-surface border border-kine-cyan/50 text-kine-neon focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan cursor-pointer">
               <option value="forman">DISCRETE FORMAN-RICCI CURVATURE</option>
               <option value="ollivier">OLLIVIER-RICCI OPTIMAL TRANSPORT</option>
               <option value="riemann">FULL RIEMANNIAN TENSOR NORM</option>
             </select>
           </div>
 
-          <button id="btn-flow-toggle" onclick="toggleRicciFlow()" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/50 text-emerald-400 transition">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <button id="btn-flow-toggle" onclick="toggleRicciFlow()" aria-label="Alternar execução contínua do fluxo de Ricci" aria-pressed="true" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/50 text-emerald-400 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping" aria-hidden="true"></span>
             <span>Flow: <strong id="val-flow-state">ON</strong></span>
           </button>
 
           <div class="hidden md:block">
-            <select id="select-vis-mode" onchange="changeVisMode(this.value)" class="px-3 py-1.5 rounded-lg bg-kine-surface border border-kine-border text-slate-300 focus:outline-none cursor-pointer">
+            <select id="select-vis-mode" onchange="changeVisMode(this.value)" aria-label="Selecione o modo de visualização 3D" class="px-3 py-1.5 rounded-lg bg-kine-surface border border-kine-border text-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan cursor-pointer">
               <option value="wireframe">Visualization: Advanced 3D</option>
               <option value="faces">Visualization: 2-Simplex Faces</option>
               <option value="tensor">Visualization: Tensor Metric</option>
             </select>
           </div>
 
-          <button onclick="stepRicciFlowManifold()" class="flex items-center space-x-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-r from-kine-cyan to-sky-500 hover:from-kine-neon hover:to-sky-400 text-black font-bold uppercase tracking-wider shadow-md shadow-kine-cyan/25 active:scale-95 transition">
-            <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+          <button onclick="stepRicciFlowManifold()" aria-label="Executar passo analítico do fluxo de Ricci" class="flex items-center space-x-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-r from-kine-cyan to-sky-500 hover:from-kine-neon hover:to-sky-400 text-black font-bold uppercase tracking-wider shadow-md shadow-kine-cyan/25 active:scale-95 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
+            <i data-lucide="play" class="w-3.5 h-3.5 fill-current" aria-hidden="true"></i>
             <span>Analyze</span>
           </button>
         </div>
 
         <!-- Right: Status Badges -->
-        <div class="flex items-center space-x-2.5 text-xs font-mono">
-          <div class="px-3 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 flex items-center space-x-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        <div class="flex items-center space-x-2.5 text-xs font-mono" role="region" aria-label="Indicadores de Convergência da Variedade">
+          <div class="px-3 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 flex items-center space-x-1.5" role="status">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden="true"></span>
             <span>TOPOLOGICAL WARM-UP: <strong class="text-emerald-300">OPTIMAL</strong></span>
           </div>
 
-          <div class="px-3 py-1.5 rounded-lg bg-kine-surface border border-kine-border text-slate-300 flex items-center space-x-1.5">
-            <i data-lucide="trending-up" class="w-3.5 h-3.5 text-kine-neon"></i>
+          <div class="px-3 py-1.5 rounded-lg bg-kine-surface border border-kine-border text-slate-300 flex items-center space-x-1.5" role="status">
+            <i data-lucide="trending-up" class="w-3.5 h-3.5 text-kine-neon" aria-hidden="true"></i>
             <span>VOL INVARIANT: <strong id="val-vol-invariant" class="text-white">341.28</strong></span>
           </div>
         </div>
 
-      </div>
+      </section>
 
       <!-- Main Layout: 7 Cols (3D Manifold & Characteristics) vs 5 Cols (Geodesic Inspector) -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         <!-- Left / Center Column (7 Cols) -->
-        <div class="lg:col-span-7 space-y-6">
+        <section class="lg:col-span-7 space-y-6" role="region" aria-label="Visualização 3D do Manifold de Ricci e Curvatura">
 
           <!-- 3D Manifold Card & Betti Indicator Header -->
           <div class="glass-panel rounded-2xl p-5 border border-kine-border relative flex flex-col">
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <!-- Betti Indicator Card -->
-              <div class="p-3.5 rounded-xl bg-kine-surface/80 border border-kine-cyan/40 relative overflow-hidden">
+              <div class="p-3.5 rounded-xl bg-kine-surface/80 border border-kine-cyan/40 relative overflow-hidden" role="status" aria-label="Indicador do Número de Betti Beta 1: 3 faces">
                 <div class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">BETTI NUMBER BETA_1 INDICATOR</div>
                 <div class="mt-1 flex items-baseline space-x-3">
                   <span id="betti-num-display" class="text-4xl font-extrabold font-mono text-kine-neon glow-text">3 <span class="text-2xl text-kine-cyan">↑</span></span>
@@ -526,7 +609,7 @@
               </div>
 
               <!-- Manifold State Summary -->
-              <div class="p-3.5 rounded-xl bg-kine-surface/80 border border-kine-border relative">
+              <div class="p-3.5 rounded-xl bg-kine-surface/80 border border-kine-border relative" role="region" aria-label="Resumo do Estado da Variedade Discreta">
                 <div class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">ESTADO DA VARIEDADE DISCRETA</div>
                 <div class="mt-1 grid grid-cols-2 gap-2 text-xs font-mono text-slate-300">
                   <div>Curvatura Média: <strong class="text-kine-neon" id="text-avg-curv">0.023</strong></div>
@@ -538,27 +621,29 @@
             </div>
 
             <!-- 3D Interactive WebGL / Canvas Container -->
-            <div class="relative w-full h-[380px] rounded-xl bg-[#050e18] border border-kine-border/80 overflow-hidden flex items-center justify-center">
-              <div id="threejs-manifold-container" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
+            <div class="relative w-full h-[380px] rounded-xl bg-[#050e18] border border-kine-border/80 overflow-hidden flex items-center justify-center" role="region" aria-label="Área de Renderização 3D do Manifold de Ricci">
+              <div id="threejs-manifold-container" class="w-full h-full cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan" role="img" aria-label="Visualização 3D interativa do Manifold Riemanniano de Ricci com 20 nós e 2-simplexos triangulares" tabindex="0">
+                <span class="sr-only">Modelo 3D interativo da variedade de Ricci renderizado via WebGL/Three.js demonstrando a deformação contínua métrica e invariantes topológicos.</span>
+              </div>
               
               <!-- Floating 3D Control Badges -->
-              <div class="absolute top-3 left-3 bg-kine-deep/80 backdrop-blur border border-kine-border px-3 py-1.5 rounded-lg text-[11px] font-mono text-slate-300 space-x-2">
+              <div class="absolute top-3 left-3 bg-kine-deep/80 backdrop-blur border border-kine-border px-3 py-1.5 rounded-lg text-[11px] font-mono text-slate-300 space-x-2" aria-hidden="true">
                 <span class="text-kine-cyan font-bold">3D MANIFOLD</span>
                 <span class="text-slate-500">|</span>
                 <span>Arraste para rotacionar • Scroll para zoom</span>
               </div>
 
-              <div class="absolute top-3 right-3 flex items-center space-x-2">
-                <button onclick="reset3DManifold()" class="px-2.5 py-1 rounded bg-kine-surface/80 hover:bg-kine-card border border-kine-border text-xs font-mono text-slate-300 transition">
+              <div class="absolute top-3 right-3 flex items-center space-x-2" role="toolbar" aria-label="Controles do Modelo 3D">
+                <button onclick="reset3DManifold()" aria-label="Redefinir visualização e rotação do modelo 3D" class="px-2.5 py-1 rounded bg-kine-surface/80 hover:bg-kine-card border border-kine-border text-xs font-mono text-slate-300 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
                   Reset 3D
                 </button>
-                <button onclick="morphManifoldShallow()" class="px-2.5 py-1 rounded bg-kine-cyan/20 border border-kine-cyan/50 text-xs font-mono text-kine-neon hover:bg-kine-cyan/30 transition">
+                <button onclick="morphManifoldShallow()" aria-label="Pulsar deformação no manifold de Ricci" class="px-2.5 py-1 rounded bg-kine-cyan/20 border border-kine-cyan/50 text-xs font-mono text-kine-neon hover:bg-kine-cyan/30 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
                   Pulsar Ricci
                 </button>
               </div>
 
               <!-- In-Canvas Formula Watermark -->
-              <div class="absolute bottom-3 left-3 font-mono text-[10px] text-slate-500/70 pointer-events-none">
+              <div class="absolute bottom-3 left-3 font-mono text-[10px] text-slate-500/70 pointer-events-none" aria-hidden="true">
                 ∂g_ij / ∂t = -2 R_ij | Forman Curvature F(e) = w_e [ (w_u/w_e + w_v/w_e) - Σ (w_e / √(w_e · w_e')) ]
               </div>
             </div>
@@ -573,7 +658,9 @@
                   <span class="text-kine-neon" id="badge-curv-dist">0.023</span>
                 </div>
                 <div class="h-28">
-                  <canvas id="chart-curvature-dist"></canvas>
+                  <canvas id="chart-curvature-dist" role="img" aria-label="Gráfico de distribuição da curvatura discreta gaussiana">
+                    <p class="sr-only">Gráfico de distribuição Gaussiana de curvatura de Ricci centrada em 0.023.</p>
+                  </canvas>
                 </div>
               </div>
 
@@ -584,7 +671,9 @@
                   <span class="text-emerald-400 font-mono">Stable</span>
                 </div>
                 <div class="h-28">
-                  <canvas id="chart-manifold-char"></canvas>
+                  <canvas id="chart-manifold-char" role="img" aria-label="Gráfico de características da variedade topológica">
+                    <p class="sr-only">Gráfico de barras das características da variedade indicando estabilidade homológica.</p>
+                  </canvas>
                 </div>
               </div>
 
@@ -598,31 +687,33 @@
                   <span class="text-[10px] px-1.5 py-0.5 rounded bg-kine-cyan/20 border border-kine-cyan/40 text-kine-neon">34 ARESTAS</span>
                 </div>
                 <div class="flex items-center space-x-3 text-[11px] font-mono">
-                  <span class="text-emerald-400 flex items-center space-x-1"><span class="w-2 h-2 rounded-sm bg-emerald-400 inline-block"></span><span>Positiva (Core)</span></span>
-                  <span class="text-rose-400 flex items-center space-x-1"><span class="w-2 h-2 rounded-sm bg-rose-400 inline-block"></span><span>Negativa (Bridge)</span></span>
+                  <span class="text-emerald-400 flex items-center space-x-1"><span class="w-2 h-2 rounded-sm bg-emerald-400 inline-block" aria-hidden="true"></span><span>Positiva (Core)</span></span>
+                  <span class="text-rose-400 flex items-center space-x-1"><span class="w-2 h-2 rounded-sm bg-rose-400 inline-block" aria-hidden="true"></span><span>Negativa (Bridge)</span></span>
                   <span class="text-slate-400 font-mono">Balanço: Σ R ≈ 0</span>
                 </div>
               </div>
               <p class="text-[11px] text-slate-400 font-mono mb-2">Ordenamento das 34 arestas da maior curvatura positiva à menor negativa evidenciando o balanço topológico</p>
               <div class="h-36">
-                <canvas id="chart-ricci-spectrum"></canvas>
+                <canvas id="chart-ricci-spectrum" role="img" aria-label="Espectro ranqueado de curvatura de Ricci das 34 arestas">
+                  <p class="sr-only">Gráfico de barras horizontais exibindo o espectro de curvatura das 34 arestas da rede com soma total próxima a zero.</p>
+                </canvas>
               </div>
             </div>
 
           </div>
 
 
-        </div>
+        </section>
 
         <!-- Right Column: Geodesic Route Inspector & Epoch Step Transitions (5 Cols) -->
-        <div class="lg:col-span-5 space-y-6">
+        <section class="lg:col-span-5 space-y-6" role="region" aria-label="Inspetor de Rotas Geodésicas e Transições de Época">
 
           <!-- Geodesic Route Inspector Card -->
           <div class="glass-panel rounded-2xl p-5 border border-kine-border flex flex-col space-y-4">
             
             <div class="flex items-center justify-between border-b border-kine-border/60 pb-3">
               <div class="flex items-center space-x-2">
-                <i data-lucide="compass" class="w-5 h-5 text-kine-neon"></i>
+                <i data-lucide="compass" class="w-5 h-5 text-kine-neon" aria-hidden="true"></i>
                 <h3 class="font-bold text-white text-sm font-mono uppercase tracking-wider">GEODESIC ROUTE INSPECTOR</h3>
               </div>
               <span class="text-xs font-mono px-2 py-0.5 rounded bg-kine-surface border border-kine-border text-slate-300">
@@ -634,12 +725,12 @@
             <div>
               <div class="flex items-center justify-between text-xs font-mono text-slate-400 mb-2">
                 <span>ATOMICAL ROUTE REPLACEMENT LOGS</span>
-                <span class="text-kine-cyan cursor-pointer hover:underline" onclick="clearReplacementLogs()">Limpar</span>
+                <button type="button" onclick="clearReplacementLogs()" aria-label="Limpar logs de substituição atômica de rotas" class="text-kine-cyan cursor-pointer hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-kine-cyan rounded px-1">Limpar</button>
               </div>
 
-              <div id="replacement-logs-list" class="space-y-2 overflow-y-auto max-h-[220px] pr-1 font-mono text-xs">
+              <div id="replacement-logs-list" class="space-y-2 overflow-y-auto max-h-[220px] pr-1 font-mono text-xs" role="log" aria-label="Logs de substituição de rotas geodésicas" aria-live="polite">
                 <!-- Log item 1 -->
-                <div class="p-2.5 rounded-lg bg-kine-surface/70 border border-kine-border hover:border-kine-cyan/50 transition cursor-pointer" onclick="inspectRoutePath('#GC-45')">
+                <div role="button" tabindex="0" aria-label="Inspecionar rota geodésica #GC-45: Aresta redundante removida" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();inspectRoutePath('#GC-45');}" class="p-2.5 rounded-lg bg-kine-surface/70 border border-kine-border hover:border-kine-cyan/50 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan" onclick="inspectRoutePath('#GC-45')">
                   <div class="flex items-center justify-between">
                     <span class="text-slate-400">[20:34:12]</span>
                     <span class="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px]">OPTIMIZED</span>
@@ -649,7 +740,7 @@
                 </div>
 
                 <!-- Log item 2 -->
-                <div class="p-2.5 rounded-lg bg-kine-surface/70 border border-kine-border hover:border-kine-cyan/50 transition cursor-pointer" onclick="inspectRoutePath('#GC-44')">
+                <div role="button" tabindex="0" aria-label="Inspecionar rota geodésica #GC-44: Desvio de alta curvatura" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();inspectRoutePath('#GC-44');}" class="p-2.5 rounded-lg bg-kine-surface/70 border border-kine-border hover:border-kine-cyan/50 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan" onclick="inspectRoutePath('#GC-44')">
                   <div class="flex items-center justify-between">
                     <span class="text-slate-400">[20:34:09]</span>
                     <span class="px-1.5 py-0.5 rounded bg-sky-950 text-sky-300 text-[10px]">REROUTED</span>
@@ -659,7 +750,7 @@
                 </div>
 
                 <!-- Log item 3 -->
-                <div class="p-2.5 rounded-lg bg-kine-surface/70 border border-kine-border hover:border-kine-cyan/50 transition cursor-pointer" onclick="inspectRoutePath('#GC-43')">
+                <div role="button" tabindex="0" aria-label="Inspecionar rota geodésica #GC-43: Deformação homotópica contínua" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();inspectRoutePath('#GC-43');}" class="p-2.5 rounded-lg bg-kine-surface/70 border border-kine-border hover:border-kine-cyan/50 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan" onclick="inspectRoutePath('#GC-43')">
                   <div class="flex items-center justify-between">
                     <span class="text-slate-400">[20:34:05]</span>
                     <span class="px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 text-[10px]">HOMOTOPY</span>
@@ -669,7 +760,7 @@
                 </div>
 
                 <!-- Log item 4 -->
-                <div class="p-2.5 rounded-lg bg-kine-surface/70 border border-kine-border hover:border-kine-cyan/50 transition cursor-pointer" onclick="inspectRoutePath('#GC-42')">
+                <div role="button" tabindex="0" aria-label="Inspecionar rota geodésica #GC-42: Geodésica estabelecida" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();inspectRoutePath('#GC-42');}" class="p-2.5 rounded-lg bg-kine-surface/70 border border-kine-border hover:border-kine-cyan/50 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan" onclick="inspectRoutePath('#GC-42')">
                   <div class="flex items-center justify-between">
                     <span class="text-slate-400">[20:34:01]</span>
                     <span class="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px]">ESTABLISHED</span>
@@ -689,7 +780,9 @@
               <p class="text-[11px] text-slate-400 font-mono mb-3">Degradação controlada de passo por época para transições sem jitter</p>
               
               <div class="h-28">
-                <canvas id="chart-route-epochs"></canvas>
+                <canvas id="chart-route-epochs" role="img" aria-label="Gráfico em degraus de transições de épocas de roteamento">
+                  <p class="sr-only">Gráfico de degraus demonstrando a estabilidade de transições por época de roteamento.</p>
+                </canvas>
               </div>
 
               <div class="mt-3 grid grid-cols-3 gap-2 text-[10px] font-mono text-center text-slate-400 border-t border-kine-border/40 pt-2">
@@ -707,32 +800,34 @@
               </div>
               <p class="text-[11px] text-slate-400 font-mono mb-2">Série temporal contínua com clamp anti-overflow u32 mantendo V → 341.28</p>
               <div class="h-28">
-                <canvas id="chart-volume-invariant"></canvas>
+                <canvas id="chart-volume-invariant" role="img" aria-label="Série temporal de conservação do invariante de volume">
+                  <p class="sr-only">Gráfico temporal de conservação de volume demonstrando estabilização em 341.28.</p>
+                </canvas>
               </div>
             </div>
 
             <!-- Control Actions -->
 
             <div class="grid grid-cols-2 gap-3 pt-2">
-              <button onclick="injectMetricPerturbation()" class="py-2 px-3 rounded-lg bg-rose-950/60 hover:bg-rose-900/60 border border-rose-500/40 text-rose-300 text-xs font-mono transition">
+              <button onclick="injectMetricPerturbation()" aria-label="Injetar perturbação métrica no cluster" class="py-2 px-3 rounded-lg bg-rose-950/60 hover:bg-rose-900/60 border border-rose-500/40 text-rose-300 text-xs font-mono transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">
                 Injetar Perturbação
               </button>
-              <button onclick="normalizeTensorVolumeAction()" class="py-2 px-3 rounded-lg bg-kine-surface hover:bg-kine-card border border-kine-cyan/50 text-kine-neon text-xs font-mono transition">
+              <button onclick="normalizeTensorVolumeAction()" aria-label="Normalizar invariante de volume do tensor métrico" class="py-2 px-3 rounded-lg bg-kine-surface hover:bg-kine-card border border-kine-cyan/50 text-kine-neon text-xs font-mono transition focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
                 Normalizar Volume
               </button>
             </div>
 
           </div>
 
-        </div>
+        </section>
 
       </div>
 
       <!-- 2D Geometric Control: Poincaré Disk & 20x20 Metric Tensor Heatmap -->
-      <div id="kineplex-2d-geometry-container" class="w-full min-h-[520px]"></div>
+      <section id="kineplex-2d-geometry-container" class="w-full min-h-[520px]" role="region" aria-label="Visualização do Disco de Poincaré 2D e Tensor Métrico"></section>
 
       <!-- Bottom Panel: Adaptive Step Controller PID Tuning Curve (Full Width) -->
-      <div class="glass-panel rounded-2xl p-6 border border-kine-border space-y-4">
+      <section class="glass-panel rounded-2xl p-6 border border-kine-border space-y-4" role="region" aria-label="Controlador PID de Ajuste do Passo de Ricci">
         
         <div class="flex items-center justify-between flex-wrap gap-3">
           <div>
@@ -748,7 +843,7 @@
           </div>
 
           <!-- Parameter Summary Badges -->
-          <div class="flex items-center space-x-3 text-xs font-mono">
+          <div class="flex items-center space-x-3 text-xs font-mono" role="region" aria-label="Parâmetros Atuais do Controlador PID">
             <span class="px-2.5 py-1 rounded bg-kine-surface border border-kine-border text-slate-300">
               ε: <strong id="param-val-eps" class="text-kine-neon">0.050</strong>
             </span>
@@ -766,7 +861,9 @@
 
         <!-- Main PID Chart Canvas -->
         <div class="h-64 rounded-xl bg-kine-deep/60 p-3 border border-kine-border/60">
-          <canvas id="chart-pid-curve"></canvas>
+          <canvas id="chart-pid-curve" role="img" aria-label="Curva temporal de resposta transitória do controlador PID de passo adaptativo">
+            <p class="sr-only">Gráfico de ajuste PID adaptativo controlando a taxa de deformação métrica.</p>
+          </canvas>
         </div>
 
         <!-- Interactive Gain Sliders -->
@@ -774,39 +871,39 @@
           
           <div>
             <div class="flex justify-between text-slate-300 mb-1">
-              <span>Ganho Proporcional (Kp)</span>
+              <label for="slider-kp">Ganho Proporcional (Kp)</label>
               <span id="slider-kp-val" class="text-emerald-400">1.23</span>
             </div>
-            <input type="range" id="slider-kp" min="0.1" max="3.0" step="0.05" value="1.23" oninput="updatePidParams()" class="w-full accent-emerald-400 cursor-pointer">
+            <input type="range" id="slider-kp" min="0.1" max="3.0" step="0.05" value="1.23" oninput="updatePidParams()" aria-label="Ganho proporcional Kp" aria-valuemin="0.1" aria-valuemax="3.0" aria-valuenow="1.23" class="w-full accent-emerald-400 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
           </div>
 
           <div>
             <div class="flex justify-between text-slate-300 mb-1">
-              <span>Ganho Integral (Ki - Windup)</span>
+              <label for="slider-ki">Ganho Integral (Ki - Windup)</label>
               <span id="slider-ki-val" class="text-purple-400">0.45</span>
             </div>
-            <input type="range" id="slider-ki" min="0.01" max="1.5" step="0.02" value="0.45" oninput="updatePidParams()" class="w-full accent-purple-400 cursor-pointer">
+            <input type="range" id="slider-ki" min="0.01" max="1.5" step="0.02" value="0.45" oninput="updatePidParams()" aria-label="Ganho integral Ki" aria-valuemin="0.01" aria-valuemax="1.5" aria-valuenow="0.45" class="w-full accent-purple-400 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400">
           </div>
 
           <div>
             <div class="flex justify-between text-slate-300 mb-1">
-              <span>Ganho Derivativo (Kd)</span>
+              <label for="slider-kd">Ganho Derivativo (Kd)</label>
               <span id="slider-kd-val" class="text-amber-400">0.09</span>
             </div>
-            <input type="range" id="slider-kd" min="0.01" max="0.8" step="0.01" value="0.09" oninput="updatePidParams()" class="w-full accent-amber-400 cursor-pointer">
+            <input type="range" id="slider-kd" min="0.01" max="0.8" step="0.01" value="0.09" oninput="updatePidParams()" aria-label="Ganho derivativo Kd" aria-valuemin="0.01" aria-valuemax="0.8" aria-valuenow="0.09" class="w-full accent-amber-400 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400">
           </div>
 
           <div>
             <div class="flex justify-between text-slate-300 mb-1">
-              <span>Passo Mínimo ε_min</span>
+              <label for="slider-eps-min">Passo Mínimo ε_min</label>
               <span id="slider-eps-val" class="text-kine-neon">0.001</span>
             </div>
-            <input type="range" id="slider-eps-min" min="0.0005" max="0.02" step="0.0005" value="0.001" oninput="updatePidParams()" class="w-full accent-cyan-400 cursor-pointer">
+            <input type="range" id="slider-eps-min" min="0.0005" max="0.02" step="0.0005" value="0.001" oninput="updatePidParams()" aria-label="Passo mínimo de Ricci épsilon" aria-valuemin="0.0005" aria-valuemax="0.02" aria-valuenow="0.001" class="w-full accent-cyan-400 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
           </div>
 
         </div>
 
-      </div>
+      </section>
 
     </div>
 
@@ -814,34 +911,34 @@
     <!-- ============================================================ -->
     <!-- TAB 3: PIPELINE E2E & ARROW STREAMS                         -->
     <!-- ============================================================ -->
-    <div id="tab-pipeline" class="tab-content space-y-6 hidden">
+    <div id="tab-pipeline" class="tab-content space-y-6 hidden" role="tabpanel" aria-labelledby="nav-tab-pipeline" tabindex="0">
       
       <!-- Pipeline Status Card -->
-      <div class="glass-panel rounded-2xl p-6 border border-kine-border space-y-6">
+      <section class="glass-panel rounded-2xl p-6 border border-kine-border space-y-6" role="region" aria-label="Execução Distribuída do Pipeline">
         <div class="flex items-center justify-between flex-wrap gap-3">
           <div>
             <span class="text-xs font-mono text-kine-neon uppercase">EXECUÇÃO DISTRIBUÍDA ATIVA (20 NÓS)</span>
             <h2 class="text-xl font-bold text-white mt-1">Pipeline de 5 Estágios Distribuídos (Malha Geodésica)</h2>
             <p class="text-xs text-slate-400">Fluxo colunar contínuo Arrow IPC gerando 4 partições Parquet e replicação mTLS em nós Standby</p>
           </div>
-          <div class="flex items-center space-x-3 text-xs font-mono">
+          <div class="flex items-center space-x-3 text-xs font-mono" role="region" aria-label="Status do Job Atual">
             <span class="px-3 py-1 rounded bg-kine-surface border border-kine-border text-slate-300">
               JOB ID: <strong id="val-pipeline-job-id" class="text-white font-mono">job-e2e-ref-001</strong>
             </span>
-            <span class="px-3 py-1 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40">
+            <span class="px-3 py-1 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40" role="status">
               STATUS: <strong id="val-pipeline-status">IDLE</strong>
             </span>
           </div>
         </div>
 
         <!-- Visual 5-Stage Stepper (20 Nós) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 relative">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 relative" role="region" aria-label="Estágios do Pipeline de Dados">
           
           <!-- Stage 1: Receptor Ingress -->
-          <div id="stage-card-1" class="glass-card rounded-xl p-4 border-2 border-kine-cyan/70 relative transition duration-300">
+          <div id="stage-card-1" class="glass-card rounded-xl p-4 border-2 border-kine-cyan/70 relative transition duration-300" role="region" aria-label="Estágio 1: Receptor Ingress">
             <div class="flex items-center justify-between text-xs font-mono text-kine-cyan mb-2">
               <span>ESTÁGIO 1</span>
-              <i data-lucide="arrow-down-left" class="w-4 h-4"></i>
+              <i data-lucide="arrow-down-left" class="w-4 h-4" aria-hidden="true"></i>
             </div>
             <h3 class="font-bold text-white text-sm">Receptor Ingress</h3>
             <p class="text-xs text-slate-400 mt-1">Ingestão Arrow IPC Zero-Copy sobre UDP/QUIC nos 4 nós Ingress.</p>
@@ -852,10 +949,10 @@
           </div>
 
           <!-- Stage 2: Wasm Compute -->
-          <div id="stage-card-2" class="glass-card rounded-xl p-4 border-2 border-purple-500/70 relative transition duration-300">
+          <div id="stage-card-2" class="glass-card rounded-xl p-4 border-2 border-purple-500/70 relative transition duration-300" role="region" aria-label="Estágio 2: Wasm SIMD Compute">
             <div class="flex items-center justify-between text-xs font-mono text-purple-400 mb-2">
               <span>ESTÁGIO 2</span>
-              <i data-lucide="cpu" class="w-4 h-4"></i>
+              <i data-lucide="cpu" class="w-4 h-4" aria-hidden="true"></i>
             </div>
             <h3 class="font-bold text-white text-sm">Wasm SIMD Compute</h3>
             <p class="text-xs text-slate-400 mt-1">Sandbox Cranelift paralela em 6 workers com AVX-512 e limite de combustível.</p>
@@ -866,10 +963,10 @@
           </div>
 
           <!-- Stage 3: Aggregation -->
-          <div id="stage-card-3" class="glass-card rounded-xl p-4 border-2 border-sky-500/70 relative transition duration-300">
+          <div id="stage-card-3" class="glass-card rounded-xl p-4 border-2 border-sky-500/70 relative transition duration-300" role="region" aria-label="Estágio 3: Agregação Sharded">
             <div class="flex items-center justify-between text-xs font-mono text-sky-400 mb-2">
               <span>ESTÁGIO 3</span>
-              <i data-lucide="layers" class="w-4 h-4"></i>
+              <i data-lucide="layers" class="w-4 h-4" aria-hidden="true"></i>
             </div>
             <h3 class="font-bold text-white text-sm">Agregação Sharded</h3>
             <p class="text-xs text-slate-400 mt-1">Group-By em memória e janelas particionadas em 3 nós de agregação.</p>
@@ -880,10 +977,10 @@
           </div>
 
           <!-- Stage 4: Terminal Parquet -->
-          <div id="stage-card-4" class="glass-card rounded-xl p-4 border-2 border-emerald-500/70 relative transition duration-300">
+          <div id="stage-card-4" class="glass-card rounded-xl p-4 border-2 border-emerald-500/70 relative transition duration-300" role="region" aria-label="Estágio 4: Terminal Parquet">
             <div class="flex items-center justify-between text-xs font-mono text-emerald-400 mb-2">
               <span>ESTÁGIO 4</span>
-              <i data-lucide="database" class="w-4 h-4"></i>
+              <i data-lucide="database" class="w-4 h-4" aria-hidden="true"></i>
             </div>
             <h3 class="font-bold text-white text-sm">Terminal Parquet</h3>
             <p class="text-xs text-slate-400 mt-1">Materialização concorrente de 4 partições Snappy nos 3 nós Parquet.</p>
@@ -894,10 +991,10 @@
           </div>
 
           <!-- Stage 5: Relay & Standby -->
-          <div id="stage-card-5" class="glass-card rounded-xl p-4 border-2 border-slate-500/70 relative transition duration-300">
+          <div id="stage-card-5" class="glass-card rounded-xl p-4 border-2 border-slate-500/70 relative transition duration-300" role="region" aria-label="Estágio 5: Relay e Standby">
             <div class="flex items-center justify-between text-xs font-mono text-slate-300 mb-2">
               <span>ESTÁGIO 5</span>
-              <i data-lucide="shield-check" class="w-4 h-4"></i>
+              <i data-lucide="shield-check" class="w-4 h-4" aria-hidden="true"></i>
             </div>
             <h3 class="font-bold text-white text-sm">Relay &amp; Standby</h3>
             <p class="text-xs text-slate-400 mt-1">Consenso SWIM mTLS Ed25519 e verificação failover em 4 nós.</p>
@@ -910,10 +1007,10 @@
         </div>
 
         <!-- Real-time Stream Terminal Console -->
-        <div id="stream-terminal-logs" class="rounded-xl bg-black/80 border border-kine-border p-4 font-mono text-xs text-slate-300 space-y-1 max-h-60 overflow-y-auto">
+        <div id="stream-terminal-logs" class="rounded-xl bg-black/80 border border-kine-border p-4 font-mono text-xs text-slate-300 space-y-1 max-h-60 overflow-y-auto" role="log" aria-label="Terminal de Telemetria e Logs Distribuídos em Tempo Real" aria-live="polite" aria-atomic="false">
           <div class="text-slate-500">// KinePlex Distributed Stream Logger (live telemetry)</div>
         </div>
-      </div>
+      </section>
 
     </div>
 
@@ -921,10 +1018,10 @@
     <!-- ============================================================ -->
     <!-- TAB 4: FIGMA DESIGN SYSTEM & MOCKUPS                        -->
     <!-- ============================================================ -->
-    <div id="tab-figma" class="tab-content space-y-6 hidden">
+    <div id="tab-figma" class="tab-content space-y-6 hidden" role="tabpanel" aria-labelledby="nav-tab-figma" tabindex="0">
       
       <!-- Intro Banner -->
-      <div class="glass-panel rounded-2xl p-6 border border-kine-border flex items-center justify-between flex-wrap gap-4">
+      <section class="glass-panel rounded-2xl p-6 border border-kine-border flex items-center justify-between flex-wrap gap-4" role="region" aria-label="Design System do Figma">
         <div>
           <div class="flex items-center space-x-2">
             <span class="text-xs px-2.5 py-1 rounded bg-purple-950 text-purple-300 border border-purple-500/40 font-mono">FIGMA DESIGN SYSTEM</span>
@@ -937,10 +1034,10 @@
           <span class="text-slate-400">Design Tokens: <strong class="text-white">50+ Styles</strong></span>
           <span class="text-slate-400">Grid: <strong class="text-kine-neon">12-Column Responsive</strong></span>
         </div>
-      </div>
+      </section>
 
       <!-- Gallery of Figma Mockup Boards -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-6" role="region" aria-label="Pranchas de Design do Figma">
         
         <!-- Mockup 1: Cluster Overview Board -->
         <div class="glass-card rounded-2xl overflow-hidden border border-kine-border">
@@ -949,13 +1046,13 @@
               <h3 class="font-bold text-white text-sm">Prancha 1: Distributed Cluster Manager</h3>
               <p class="text-xs text-slate-400">Dashboard de overview, topologia neural de nós e telemetria de hardware</p>
             </div>
-            <a href="assets/figma_cluster_overview.jpg" target="_blank" class="px-3 py-1 rounded bg-kine-surface hover:bg-kine-cardhover border border-kine-border text-xs font-mono text-kine-neon flex items-center space-x-1">
-              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            <a href="assets/figma_cluster_overview.jpg" target="_blank" rel="noopener noreferrer" aria-label="Abrir Prancha 1 do Figma em Alta Resolução em nova aba" class="px-3 py-1 rounded bg-kine-surface hover:bg-kine-cardhover border border-kine-border text-xs font-mono text-kine-neon flex items-center space-x-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
+              <i data-lucide="external-link" class="w-3.5 h-3.5" aria-hidden="true"></i>
               <span>Abrir HD</span>
             </a>
           </div>
           <div class="relative bg-black/60 aspect-video flex items-center justify-center p-2">
-            <img src="assets/figma_cluster_overview.jpg" alt="Figma Design Mockup 1 - Cluster Overview" class="w-full h-full object-cover rounded-lg shadow-2xl border border-kine-border/40">
+            <img src="assets/figma_cluster_overview.jpg" alt="Mockup visual da Prancha 1 do Figma exibindo o Distributed Cluster Manager com topologia neural e telemetria de 20 nós" class="w-full h-full object-cover rounded-lg shadow-2xl border border-kine-border/40">
           </div>
           <div class="p-4 bg-kine-deep/60 text-xs font-mono text-slate-300 grid grid-cols-3 gap-2">
             <div>Figma Frame: <strong class="text-white">Desktop (1920x1080)</strong></div>
@@ -971,13 +1068,13 @@
               <h3 class="font-bold text-white text-sm">Prancha 2: Geometric Control &amp; Ricci Flow</h3>
               <p class="text-xs text-slate-400">Analisador de curvatura Forman-Ricci, 2-simplexos e curvas de ganho PID</p>
             </div>
-            <a href="assets/figma_geometric_topology.jpg" target="_blank" class="px-3 py-1 rounded bg-kine-surface hover:bg-kine-cardhover border border-kine-border text-xs font-mono text-kine-neon flex items-center space-x-1">
-              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            <a href="assets/figma_geometric_topology.jpg" target="_blank" rel="noopener noreferrer" aria-label="Abrir Prancha 2 do Figma em Alta Resolução em nova aba" class="px-3 py-1 rounded bg-kine-surface hover:bg-kine-cardhover border border-kine-border text-xs font-mono text-kine-neon flex items-center space-x-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
+              <i data-lucide="external-link" class="w-3.5 h-3.5" aria-hidden="true"></i>
               <span>Abrir HD</span>
             </a>
           </div>
           <div class="relative bg-black/60 aspect-video flex items-center justify-center p-2">
-            <img src="assets/figma_geometric_topology.jpg" alt="Figma Design Mockup 2 - Geometric Control" class="w-full h-full object-cover rounded-lg shadow-2xl border border-kine-border/40">
+            <img src="assets/figma_geometric_topology.jpg" alt="Mockup visual da Prancha 2 do Figma exibindo o Geometric Control com analisador de curvatura Forman-Ricci e disco hiperbólico" class="w-full h-full object-cover rounded-lg shadow-2xl border border-kine-border/40">
           </div>
           <div class="p-4 bg-kine-deep/60 text-xs font-mono text-slate-300 grid grid-cols-3 gap-2">
             <div>Figma Frame: <strong class="text-white">Desktop (1920x1080)</strong></div>
@@ -986,12 +1083,12 @@
           </div>
         </div>
 
-      </div>
+      </section>
 
       <!-- Figma Tokens Spec Sheet -->
-      <div class="glass-panel rounded-2xl p-6 border border-kine-border space-y-4">
+      <section class="glass-panel rounded-2xl p-6 border border-kine-border space-y-4" role="region" aria-label="Especificação de Tokens de Cores e Tipografia">
         <h3 class="text-base font-bold text-white flex items-center space-x-2">
-          <i data-lucide="palette" class="w-5 h-5 text-kine-cyan"></i>
+          <i data-lucide="palette" class="w-5 h-5 text-kine-cyan" aria-hidden="true"></i>
           <span>Especificação de Tokens de Cores &amp; Tipografia (Design System)</span>
         </h3>
         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 text-xs font-mono">
@@ -1026,7 +1123,7 @@
             <strong class="text-white">#EF4444</strong>
           </div>
         </div>
-      </div>
+      </section>
 
     </div>
 
@@ -1036,22 +1133,22 @@
   <!-- ============================================================== -->
   <!-- MODAL: SUBMETER NOVO JOB                                       -->
   <!-- ============================================================== -->
-  <div id="modal-submit" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
+  <div id="modal-submit" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-submit-title" aria-describedby="modal-submit-desc">
     <div class="glass-panel w-full max-w-2xl rounded-2xl border border-kine-cyan/60 p-6 space-y-5 shadow-2xl relative">
       
       <!-- Close Button -->
-      <button onclick="closeSubmitModal()" class="absolute right-4 top-4 text-slate-400 hover:text-white transition">
-        <i data-lucide="x" class="w-5 h-5"></i>
+      <button onclick="closeSubmitModal()" aria-label="Fechar formulário de submissão de job" class="absolute right-4 top-4 text-slate-400 hover:text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan rounded p-1">
+        <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
       </button>
 
       <!-- Modal Header -->
       <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-lg bg-kine-cyan/20 border border-kine-cyan/40 flex items-center justify-center text-kine-neon">
+        <div class="w-9 h-9 rounded-lg bg-kine-cyan/20 border border-kine-cyan/40 flex items-center justify-center text-kine-neon" aria-hidden="true">
           <i data-lucide="upload-cloud" class="w-5 h-5"></i>
         </div>
         <div>
-          <h3 class="text-lg font-bold text-white">Submeter Novo Grafo Distribuído</h3>
-          <p class="text-xs text-slate-400">O nó receptor assumirá o papel de Semeador Efêmero para validação e placement</p>
+          <h3 id="modal-submit-title" class="text-lg font-bold text-white">Submeter Novo Grafo Distribuído</h3>
+          <p id="modal-submit-desc" class="text-xs text-slate-400">O nó receptor assumirá o papel de Semeador Efêmero para validação e placement</p>
         </div>
       </div>
 
@@ -1059,29 +1156,29 @@
       <form id="job-submit-form" onsubmit="handleJobSubmit(event)" class="space-y-4 text-xs font-mono">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-slate-300 mb-1">TENANT ID (Isolamento Multi-tenant)</label>
-            <input type="text" id="form-tenant-id" required value="tenant-production-fintech" class="w-full px-3 py-2 rounded-lg bg-kine-surface border border-kine-border text-white focus:outline-none focus:border-kine-neon">
+            <label for="form-tenant-id" class="block text-slate-300 mb-1">TENANT ID (Isolamento Multi-tenant)</label>
+            <input type="text" id="form-tenant-id" required value="tenant-production-fintech" class="w-full px-3 py-2 rounded-lg bg-kine-surface border border-kine-border text-white focus:outline-none focus:border-kine-neon focus-visible:ring-2 focus-visible:ring-kine-cyan">
           </div>
           <div>
-            <label class="block text-slate-300 mb-1">IDEMPOTENCY KEY</label>
-            <input type="text" id="form-idempotency" required value="tx-kpx-20261003-99" class="w-full px-3 py-2 rounded-lg bg-kine-surface border border-kine-border text-white focus:outline-none focus:border-kine-neon">
+            <label for="form-idempotency" class="block text-slate-300 mb-1">IDEMPOTENCY KEY</label>
+            <input type="text" id="form-idempotency" required value="tx-kpx-20261003-99" class="w-full px-3 py-2 rounded-lg bg-kine-surface border border-kine-border text-white focus:outline-none focus:border-kine-neon focus-visible:ring-2 focus-visible:ring-kine-cyan">
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-slate-300 mb-1">LIMITE DE MEMÓRIA (MB)</label>
-            <input type="number" id="form-memory-mb" value="1024" min="128" max="16384" class="w-full px-3 py-2 rounded-lg bg-kine-surface border border-kine-border text-white focus:outline-none focus:border-kine-neon">
+            <label for="form-memory-mb" class="block text-slate-300 mb-1">LIMITE DE MEMÓRIA (MB)</label>
+            <input type="number" id="form-memory-mb" value="1024" min="128" max="16384" class="w-full px-3 py-2 rounded-lg bg-kine-surface border border-kine-border text-white focus:outline-none focus:border-kine-neon focus-visible:ring-2 focus-visible:ring-kine-cyan">
           </div>
           <div>
-            <label class="block text-slate-300 mb-1">COMBUSTÍVEL WASM (Fuel Limit)</label>
-            <input type="number" id="form-fuel-limit" value="1000000" min="10000" max="50000000" class="w-full px-3 py-2 rounded-lg bg-kine-surface border border-kine-border text-white focus:outline-none focus:border-kine-neon">
+            <label for="form-fuel-limit" class="block text-slate-300 mb-1">COMBUSTÍVEL WASM (Fuel Limit)</label>
+            <input type="number" id="form-fuel-limit" value="1000000" min="10000" max="50000000" class="w-full px-3 py-2 rounded-lg bg-kine-surface border border-kine-border text-white focus:outline-none focus:border-kine-neon focus-visible:ring-2 focus-visible:ring-kine-cyan">
           </div>
         </div>
 
         <div>
-          <label class="block text-slate-300 mb-1">MÓDULO UDF WASM ASSINADO</label>
-          <select id="form-wasm-module" class="w-full px-3 py-2 rounded-lg bg-kine-surface border border-kine-border text-white focus:outline-none focus:border-kine-neon">
+          <label for="form-wasm-module" class="block text-slate-300 mb-1">MÓDULO UDF WASM ASSINADO</label>
+          <select id="form-wasm-module" aria-label="Módulo UDF Wasm assinado" class="w-full px-3 py-2 rounded-lg bg-kine-surface border border-kine-border text-white focus:outline-none focus:border-kine-neon focus-visible:ring-2 focus-visible:ring-kine-cyan cursor-pointer">
             <option value="anomaly_detector.wasm">anomaly_detector.wasm (SHA-256: e3b0c44298fc1c14...)</option>
             <option value="telemetry_normalizer.wasm">telemetry_normalizer.wasm (SHA-256: 8f432a901...)</option>
             <option value="fraud_rules_engine.wasm">fraud_rules_engine.wasm (SHA-256: a12bc7803...)</option>
@@ -1089,15 +1186,15 @@
         </div>
 
         <div class="flex items-center space-x-3 p-3 rounded-lg bg-kine-surface/50 border border-kine-border">
-          <input type="checkbox" id="form-simd" checked class="rounded border-slate-600 text-kine-cyan focus:ring-0">
+          <input type="checkbox" id="form-simd" checked class="rounded border-slate-600 text-kine-cyan focus:ring-0 focus-visible:ring-2 focus-visible:ring-kine-cyan">
           <label for="form-simd" class="text-slate-300 cursor-pointer">Habilitar Vetorização SIMD no Host (AVX2 / AVX-512)</label>
         </div>
 
         <div class="flex items-center justify-end space-x-3 pt-4 border-t border-kine-border">
-          <button type="button" onclick="closeSubmitModal()" class="px-4 py-2 rounded-lg bg-kine-surface hover:bg-kine-card border border-kine-border text-slate-300">
+          <button type="button" onclick="closeSubmitModal()" aria-label="Cancelar submissão e fechar modal" class="px-4 py-2 rounded-lg bg-kine-surface hover:bg-kine-card border border-kine-border text-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
             Cancelar
           </button>
-          <button type="submit" class="px-5 py-2 rounded-lg bg-gradient-to-r from-kine-cyan to-kine-neon text-black font-bold uppercase tracking-wider shadow-lg shadow-kine-cyan/30 active:scale-95 transition">
+          <button type="submit" aria-label="Ativar e submeter grafo ao cluster" class="px-5 py-2 rounded-lg bg-gradient-to-r from-kine-cyan to-kine-neon text-black font-bold uppercase tracking-wider shadow-lg shadow-kine-cyan/30 active:scale-95 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan">
             Ativar Grafo no Cluster
           </button>
         </div>
@@ -1105,6 +1202,25 @@
 
     </div>
   </div>
+
+
+  <!-- ============================================================== -->
+  <!-- FOOTER GLOBAL ACESSÍVEL (WCAG 2.2 AA)                          -->
+  <!-- ============================================================== -->
+  <footer class="border-t border-kine-border/60 py-6 px-6 mt-12 glass-panel text-xs text-slate-400 font-mono" role="contentinfo" aria-label="Rodapé do Sistema KinePlex">
+    <div class="max-w-[1720px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-2">
+        <span class="text-white font-bold tracking-wider">KINEPLEX</span>
+        <span>&copy; 2026 Zero-Copy Neural Dataflow Mesh</span>
+        <span class="text-kine-cyan">• Conforme WCAG 2.2 AA</span>
+      </div>
+      <div class="flex items-center space-x-4 text-[11px]">
+        <span>Linux Kernel LKM /dev/kinegeo</span>
+        <span>mTLS Ed25519</span>
+        <span>Cranelift Wasm AVX-512</span>
+      </div>
+    </div>
+  </footer>
 
 
   <!-- ============================================================== -->
@@ -1336,6 +1452,7 @@
       ctx.setLineDash([]);
 
       // 3. Desenhar Partículas de Spikes (Fluxo de Dados em Tempo Real)
+      const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (state.particlesActive && state.particles.length > 0) {
         state.particles.forEach(p => {
           const edge = state.edges[p.edgeIdx];
@@ -1345,8 +1462,10 @@
           if (!source || !target) return;
           if (source.status === 'FAILED' || target.status === 'FAILED') return;
 
-          p.progress += p.speed;
-          if (p.progress >= 1) p.progress = 0;
+          if (!prefersReducedMotion) {
+            p.progress += p.speed;
+            if (p.progress >= 1) p.progress = 0;
+          }
 
           const x1 = source.x * scaleX;
           const y1 = source.y * scaleY;
@@ -1436,9 +1555,11 @@
         const rxEl = document.getElementById('inspect-rx');
         if (rxEl) rxEl.innerText = found.rx;
         if (overlay) overlay.classList.remove('hidden');
+        announceToScreenReader(`Nó ${found.id} selecionado. Papel ${found.role}, ${found.numa}, CPU ${found.cpu}%, Memória ${found.mem}%, Banda RX ${found.rx}`);
       } else {
         state.selectedNode = null;
         if (overlay) overlay.classList.add('hidden');
+        announceToScreenReader('Seleção de nó cancelada.');
       }
     }
 
@@ -1470,12 +1591,22 @@
 
     function toggleParticles() {
       state.particlesActive = !state.particlesActive;
-      document.getElementById('btn-toggle-particles').innerText = 'Spikes: ' + (state.particlesActive ? 'ON' : 'OFF');
+      const btn = document.getElementById('btn-toggle-particles');
+      if (btn) {
+        btn.innerText = 'Spikes: ' + (state.particlesActive ? 'ON' : 'OFF');
+        btn.setAttribute('aria-pressed', state.particlesActive ? 'true' : 'false');
+      }
+      announceToScreenReader('Partículas de spikes ' + (state.particlesActive ? 'ativadas' : 'desativadas'));
     }
 
     function toggle2SimplexFaces() {
       state.simplexFacesActive = !state.simplexFacesActive;
-      document.getElementById('btn-toggle-simplex').innerText = '2-Simplexos (Faces): ' + (state.simplexFacesActive ? 'ON' : 'OFF');
+      const btn = document.getElementById('btn-toggle-simplex');
+      if (btn) {
+        btn.innerText = '2-Simplexos (Faces): ' + (state.simplexFacesActive ? 'ON' : 'OFF');
+        btn.setAttribute('aria-pressed', state.simplexFacesActive ? 'true' : 'false');
+      }
+      announceToScreenReader('Renderização de faces de 2-simplexos ' + (state.simplexFacesActive ? 'ativada' : 'desativada'));
     }
 
     // ==============================================================
@@ -1632,8 +1763,18 @@
           const isSelected = state.selectedNode && state.selectedNode.id === n.id;
           const theme = getNodeTheme(n);
           const card = document.createElement('div');
-          card.className = `p-3 rounded-xl border ${isFailed ? 'border-rose-500/50 bg-rose-950/30' : (isSelected ? 'border-kine-cyan bg-kine-surface/90 shadow-lg shadow-kine-cyan/20' : 'border-kine-border bg-kine-surface/60')} hover:border-kine-cyan/60 transition cursor-pointer`;
+          card.setAttribute('role', 'button');
+          card.setAttribute('tabindex', '0');
+          card.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+          card.setAttribute('aria-label', `Selecionar nó ${n.id}, papel ${n.role}, ${n.numa}, status ${n.status}, uso de CPU ${n.cpu} porcento`);
+          card.className = `p-3 rounded-xl border ${isFailed ? 'border-rose-500/50 bg-rose-950/30' : (isSelected ? 'border-kine-cyan bg-kine-surface/90 shadow-lg shadow-kine-cyan/20' : 'border-kine-border bg-kine-surface/60')} hover:border-kine-cyan/60 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan`;
           card.onclick = () => selectNodeById(n.id);
+          card.onkeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              selectNodeById(n.id);
+            }
+          };
           card.innerHTML = `
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-2">
@@ -1917,13 +2058,17 @@
     async function toggleRicciFlow() {
       ricciFlowLoopActive = !ricciFlowLoopActive;
       const btn = document.getElementById('btn-flow-toggle');
-      if (ricciFlowLoopActive) {
-        btn.className = "flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/50 text-emerald-400 transition";
-        btn.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span><span>Flow: <strong id="val-flow-state">ON</strong></span>';
-      } else {
-        btn.className = "flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-slate-400 transition";
-        btn.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-500"></span><span>Flow: <strong id="val-flow-state">OFF</strong></span>';
+      if (btn) {
+        btn.setAttribute('aria-pressed', ricciFlowLoopActive ? 'true' : 'false');
       }
+      if (ricciFlowLoopActive) {
+        btn.className = "flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/50 text-emerald-400 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400";
+        btn.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping" aria-hidden="true"></span><span>Flow: <strong id="val-flow-state">ON</strong></span>';
+      } else {
+        btn.className = "flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-slate-400 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-kine-cyan";
+        btn.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-500" aria-hidden="true"></span><span>Flow: <strong id="val-flow-state">OFF</strong></span>';
+      }
+      announceToScreenReader('Fluxo contínuo de Ricci ' + (ricciFlowLoopActive ? 'ativado' : 'pausado'));
       try {
         await fetch(`${API_BASE}/api/v1/geometry/ricci/toggle`, { method: 'POST' });
       } catch (e) {}
@@ -1938,6 +2083,15 @@
       const kd = parseFloat(document.getElementById('slider-kd').value);
       const epsMin = parseFloat(document.getElementById('slider-eps-min').value);
 
+      const sKp = document.getElementById('slider-kp');
+      const sKi = document.getElementById('slider-ki');
+      const sKd = document.getElementById('slider-kd');
+      const sEps = document.getElementById('slider-eps-min');
+      if (sKp) sKp.setAttribute('aria-valuenow', kp);
+      if (sKi) sKi.setAttribute('aria-valuenow', ki);
+      if (sKd) sKd.setAttribute('aria-valuenow', kd);
+      if (sEps) sEps.setAttribute('aria-valuenow', epsMin);
+
       document.getElementById('slider-kp-val').innerText = kp.toFixed(2);
       document.getElementById('slider-ki-val').innerText = ki.toFixed(2);
       document.getElementById('slider-kd-val').innerText = kd.toFixed(2);
@@ -1950,7 +2104,8 @@
       // Recalcular dinamicamente o passo simulado ε
       const newEps = (0.050 * (1.23 / kp) + ki * 0.01).toFixed(3);
       document.getElementById('param-val-eps').innerText = newEps;
-      document.getElementById('val-pid-eps').innerText = newEps;
+      const vPidEps = document.getElementById('val-pid-eps');
+      if (vPidEps) vPidEps.innerText = newEps;
 
       // Atualizar o gráfico PID com os novos ganhos
       if (pidChartInstance) {
@@ -1989,8 +2144,17 @@
       const nextEpoch = document.getElementById('val-route-epoch').innerText;
       const list = document.getElementById('replacement-logs-list');
       const item = document.createElement('div');
-      item.className = "p-2.5 rounded-lg bg-rose-950/40 border border-rose-500/40 hover:border-kine-cyan/50 transition cursor-pointer";
+      item.setAttribute('role', 'button');
+      item.setAttribute('tabindex', '0');
+      item.setAttribute('aria-label', `Inspecionar choque de tráfego na rota #GC-46`);
+      item.className = "p-2.5 rounded-lg bg-rose-950/40 border border-rose-500/40 hover:border-kine-cyan/50 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400";
       item.onclick = () => inspectRoutePath('#GC-PERTURB');
+      item.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          inspectRoutePath('#GC-PERTURB');
+        }
+      };
       item.innerHTML = `
         <div class="flex items-center justify-between">
           <span class="text-rose-400">[${time}]</span>
@@ -2005,6 +2169,7 @@
       const badge = document.getElementById('badge-controller-status');
       badge.className = "text-xs px-2.5 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-500/50 font-mono animate-pulse";
       badge.innerText = "DAMPING ACTIVE";
+      announceToScreenReader(`Perturbação métrica injetada. Transição para Epoch ${nextEpoch} iniciada.`);
       setTimeout(() => {
         badge.className = "text-xs px-2.5 py-0.5 rounded-full bg-kine-cyan/20 border border-kine-cyan/50 text-kine-neon font-mono";
         badge.innerText = "TUNING ACTIVE";
@@ -2028,6 +2193,7 @@
         invElem.innerText = "341.28";
       }
       addGeodesicLog(`[NORMALIZAÇÃO] Volume constante mantido (341.28). Proteção u32 anti-overflow verificada.`);
+      announceToScreenReader('Volume do tensor normalizado para 341.28.');
     }
 
     function inspectRoutePath(pathId) {
@@ -2038,6 +2204,7 @@
       document.getElementById('replacement-logs-list').innerHTML = `
         <div class="text-slate-500 text-center py-4">Nenhum log residual no buffer.</div>
       `;
+      announceToScreenReader('Logs de rotas geodésicas limpos.');
     }
 
     // ==============================================================
@@ -2065,12 +2232,35 @@
           window.kineplex2DGeometry.resize();
         }
 
+        // Enforce accessibility in dynamically injected canvases
+        const threeContainer = document.getElementById('threejs-manifold-container');
+        if (threeContainer) {
+          const c3d = threeContainer.querySelector('canvas');
+          if (c3d) {
+            c3d.setAttribute('role', 'img');
+            c3d.setAttribute('aria-label', 'Visualização 3D interativa da variedade Riemanniana de Ricci com 20 nós e superfícies triangulares de 2-simplexos');
+            c3d.setAttribute('tabindex', '0');
+          }
+        }
+        const pCanvas = document.getElementById('poincareCanvas');
+        if (pCanvas) {
+          pCanvas.setAttribute('role', 'img');
+          pCanvas.setAttribute('aria-label', 'Visualização em 2D do Disco Hiperbólico de Poincaré projetando nós e geodésicas da malha neural');
+          pCanvas.setAttribute('tabindex', '0');
+        }
+        const hCanvas = document.getElementById('heatmapCanvas');
+        if (hCanvas) {
+          hCanvas.setAttribute('role', 'img');
+          hCanvas.setAttribute('aria-label', 'Matriz do Tensor Métrico 20 por 20 em mapa de calor bidimensional');
+          hCanvas.setAttribute('tabindex', '0');
+        }
+
         // 3. Redimensionar gráficos do Chart.js
         if (typeof curvDistChartInstance !== 'undefined' && curvDistChartInstance) curvDistChartInstance.resize();
         if (typeof manifoldCharChartInstance !== 'undefined' && manifoldCharChartInstance) manifoldCharChartInstance.resize();
         if (typeof routeEpochChartInstance !== 'undefined' && routeEpochChartInstance) routeEpochChartInstance.resize();
         if (typeof pidChartInstance !== 'undefined' && pidChartInstance) pidChartInstance.resize();
-      }, 80);
+      }, 120);
     }
 
     // ==============================================================
@@ -2086,12 +2276,17 @@
       document.querySelectorAll('.nav-tab-btn').forEach(btn => {
         btn.classList.remove('border-kine-neon', 'text-kine-neon');
         btn.classList.add('border-transparent', 'text-slate-400');
+        btn.setAttribute('aria-selected', 'false');
+        btn.setAttribute('tabindex', '-1');
       });
 
       const activeNav = document.getElementById('nav-' + tabId);
       if (activeNav) {
         activeNav.classList.add('border-kine-neon', 'text-kine-neon');
         activeNav.classList.remove('border-transparent', 'text-slate-400');
+        activeNav.setAttribute('aria-selected', 'true');
+        activeNav.setAttribute('tabindex', '0');
+        announceToScreenReader(`Aba ativada: ${activeNav.innerText.trim()}`);
       }
 
       if (tabId === 'tab-geometric') {
@@ -2100,12 +2295,66 @@
     }
 
     function openSubmitModal() {
-      document.getElementById('modal-submit').classList.remove('hidden');
+      const modal = document.getElementById('modal-submit');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      const trigger = document.getElementById('btn-open-submit-modal');
+      if (trigger) trigger.setAttribute('aria-expanded', 'true');
+      const firstInput = document.getElementById('form-tenant-id');
+      if (firstInput) firstInput.focus();
+      announceToScreenReader('Janela modal de submissão de job aberta.');
     }
 
     function closeSubmitModal() {
-      document.getElementById('modal-submit').classList.add('hidden');
+      const modal = document.getElementById('modal-submit');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      const trigger = document.getElementById('btn-open-submit-modal');
+      if (trigger) {
+        trigger.setAttribute('aria-expanded', 'false');
+        trigger.focus();
+      }
+      announceToScreenReader('Janela modal de submissão fechada.');
     }
+
+    // Navegação por Teclado na Tablist (WAI-ARIA Tabs Pattern)
+    function initTabKeyboardNavigation() {
+      const tabs = Array.from(document.querySelectorAll('[role="tablist"] [role="tab"]'));
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('keydown', (e) => {
+          let nextIndex = null;
+          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            nextIndex = (index + 1) % tabs.length;
+          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            nextIndex = (index - 1 + tabs.length) % tabs.length;
+          } else if (e.key === 'Home') {
+            e.preventDefault();
+            nextIndex = 0;
+          } else if (e.key === 'End') {
+            e.preventDefault();
+            nextIndex = tabs.length - 1;
+          }
+
+          if (nextIndex !== null) {
+            tabs[nextIndex].focus();
+            tabs[nextIndex].click();
+          }
+        });
+      });
+    }
+
+    // Fechar modal com Escape
+    document.addEventListener('keydown', (e) => {
+      const modal = document.getElementById('modal-submit');
+      if (modal && !modal.classList.contains('hidden')) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeSubmitModal();
+        }
+      }
+    });
 
     async function runRealClusterSimulation() {
       const rowCountSelect = document.getElementById('sim-row-count');

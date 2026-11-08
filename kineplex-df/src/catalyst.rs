@@ -1519,6 +1519,21 @@ impl Expression {
                             out[i] = lv[i] == rv[i];
                         }
                     }
+                    (ColumnVector::Long(lv), ColumnVector::Int(rv)) => {
+                        for i in 0..n {
+                            out[i] = lv[i] == (rv[i] as i64);
+                        }
+                    }
+                    (ColumnVector::Int(lv), ColumnVector::Long(rv)) => {
+                        for i in 0..n {
+                            out[i] = (lv[i] as i64) == rv[i];
+                        }
+                    }
+                    (ColumnVector::Int(lv), ColumnVector::Int(rv)) => {
+                        for i in 0..n {
+                            out[i] = lv[i] == rv[i];
+                        }
+                    }
                     (ColumnVector::Double(lv), ColumnVector::Double(rv)) => {
                         for i in 0..n {
                             out[i] = lv[i] == rv[i];
@@ -1534,6 +1549,21 @@ impl Expression {
                 let mut out = AlignedBuffer::from_elem(false, n);
                 match (&l, &r) {
                     (ColumnVector::Long(lv), ColumnVector::Long(rv)) => {
+                        for i in 0..n {
+                            out[i] = lv[i] != rv[i];
+                        }
+                    }
+                    (ColumnVector::Long(lv), ColumnVector::Int(rv)) => {
+                        for i in 0..n {
+                            out[i] = lv[i] != (rv[i] as i64);
+                        }
+                    }
+                    (ColumnVector::Int(lv), ColumnVector::Long(rv)) => {
+                        for i in 0..n {
+                            out[i] = (lv[i] as i64) != rv[i];
+                        }
+                    }
+                    (ColumnVector::Int(lv), ColumnVector::Int(rv)) => {
                         for i in 0..n {
                             out[i] = lv[i] != rv[i];
                         }
@@ -1557,6 +1587,21 @@ impl Expression {
                             out[i] = lv[i] < rv[i];
                         }
                     }
+                    (ColumnVector::Long(lv), ColumnVector::Int(rv)) => {
+                        for i in 0..n {
+                            out[i] = lv[i] < (rv[i] as i64);
+                        }
+                    }
+                    (ColumnVector::Int(lv), ColumnVector::Long(rv)) => {
+                        for i in 0..n {
+                            out[i] = (lv[i] as i64) < rv[i];
+                        }
+                    }
+                    (ColumnVector::Int(lv), ColumnVector::Int(rv)) => {
+                        for i in 0..n {
+                            out[i] = lv[i] < rv[i];
+                        }
+                    }
                     (ColumnVector::Double(lv), ColumnVector::Double(rv)) => {
                         for i in 0..n {
                             out[i] = lv[i] < rv[i];
@@ -1572,6 +1617,21 @@ impl Expression {
                 let mut out = AlignedBuffer::from_elem(false, n);
                 match (&l, &r) {
                     (ColumnVector::Long(lv), ColumnVector::Long(rv)) => {
+                        for i in 0..n {
+                            out[i] = lv[i] <= rv[i];
+                        }
+                    }
+                    (ColumnVector::Long(lv), ColumnVector::Int(rv)) => {
+                        for i in 0..n {
+                            out[i] = lv[i] <= (rv[i] as i64);
+                        }
+                    }
+                    (ColumnVector::Int(lv), ColumnVector::Long(rv)) => {
+                        for i in 0..n {
+                            out[i] = (lv[i] as i64) <= rv[i];
+                        }
+                    }
+                    (ColumnVector::Int(lv), ColumnVector::Int(rv)) => {
                         for i in 0..n {
                             out[i] = lv[i] <= rv[i];
                         }
@@ -1595,6 +1655,21 @@ impl Expression {
                             out[i] = lv[i] > rv[i];
                         }
                     }
+                    (ColumnVector::Long(lv), ColumnVector::Int(rv)) => {
+                        for i in 0..n {
+                            out[i] = lv[i] > (rv[i] as i64);
+                        }
+                    }
+                    (ColumnVector::Int(lv), ColumnVector::Long(rv)) => {
+                        for i in 0..n {
+                            out[i] = (lv[i] as i64) > rv[i];
+                        }
+                    }
+                    (ColumnVector::Int(lv), ColumnVector::Int(rv)) => {
+                        for i in 0..n {
+                            out[i] = lv[i] > rv[i];
+                        }
+                    }
                     (ColumnVector::Double(lv), ColumnVector::Double(rv)) => {
                         for i in 0..n {
                             out[i] = lv[i] > rv[i];
@@ -1610,6 +1685,21 @@ impl Expression {
                 let mut out = AlignedBuffer::from_elem(false, n);
                 match (&l, &r) {
                     (ColumnVector::Long(lv), ColumnVector::Long(rv)) => {
+                        for i in 0..n {
+                            out[i] = lv[i] >= rv[i];
+                        }
+                    }
+                    (ColumnVector::Long(lv), ColumnVector::Int(rv)) => {
+                        for i in 0..n {
+                            out[i] = lv[i] >= (rv[i] as i64);
+                        }
+                    }
+                    (ColumnVector::Int(lv), ColumnVector::Long(rv)) => {
+                        for i in 0..n {
+                            out[i] = (lv[i] as i64) >= rv[i];
+                        }
+                    }
+                    (ColumnVector::Int(lv), ColumnVector::Int(rv)) => {
                         for i in 0..n {
                             out[i] = lv[i] >= rv[i];
                         }

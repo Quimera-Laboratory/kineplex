@@ -206,3 +206,73 @@ impl<T: Copy> Drop for AlignedBuffer<T> {
         }
     }
 }
+
+/// Arena de registradores vetoriais com simpatia mecânica para eliminar alocações dinâmicas
+/// na avaliação de expressões da AST e fusão de estágios.
+pub struct VectorArena {
+    storage: AlignedBuffer<u8>,
+    cursor: usize,
+}
+
+impl VectorArena {
+    /// Inicializa a arena com capacidade em bytes (padrão 256 KiB, cabendo na Cache L2).
+    pub fn new() -> Self {
+        Self::with_capacity(256 * 1024)
+    }
+
+    /// Inicializa a arena com capacidade arbitrária alinhada a 64 bytes.
+    pub fn with_capacity(capacity_bytes: usize) -> Self {
+        let cap = capacity_bytes.max(CACHE_LINE_BYTES);
+        Self {
+            storage: AlignedBuffer::from_elem(0_u8, cap),
+            cursor: 0,
+        }
+    }
+
+    /// Aloca uma fatia contígua alinhada a 64 bytes de `count` elementos do tipo `T`.
+    #[inline(always)]
+    pub fn alloc_slice_mut<T: Copy>(&mut self, count: usize) -> &mut [T] {
+        let align = std::mem::align_of::<T>().max(CACHE_LINE_BYTES);
+        let size = count * std::mem::size_of::<T>();
+        let offset = (self.cursor + align - 1) & !(align - 1);
+        if offset + size > self.storage.len() {
+            // Em caso de extrapolação da capacidade, expande dobrando o buffer
+            let new_cap = (self.storage.len() * 2).max(offset + size);
+            self.storage = AlignedBuffer::from_elem(0_u8, new_cap);
+            self.cursor = 0;
+            return self.alloc_slice_mut(count);
+        }
+        self.cursor = offset + size;
+        unsafe {
+            let ptr = self.storage.as_mut_ptr().add(offset) as *mut T;
+            slice::from_raw_parts_mut(ptr, count)
+        }
+    }
+
+    /// Reseta o cursor para reutilização imediata sem desalocação de silício.
+    #[inline(always)]
+    pub fn reset(&mut self) {
+        self.cursor = 0;
+    }
+}
+
+impl Default for VectorArena {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+thread_local! {
+    static THREAD_ARENA: std::cell::RefCell<VectorArena> = std::cell::RefCell::new(VectorArena::new());
+}
+
+/// Executa uma operação com a arena de vetorização local da thread corrente.
+#[inline(always)]
+pub fn with_thread_arena<R, F: FnOnce(&mut VectorArena) -> R>(f: F) -> R {
+    THREAD_ARENA.with(|cell| {
+        let mut arena = cell.borrow_mut();
+        let res = f(&mut arena);
+        arena.reset();
+        res
+    })
+}

@@ -517,71 +517,73 @@ impl IngnesDataFrame {
         let kept_count = mask.count_ones();
         let mut new_cols = Vec::with_capacity(self.columns.len());
 
+        // Extrai os índices correspondentes UMA ÚNICA VEZ para todas as colunas via TZCNT/BLSR
+        let mut matched_indices = Vec::with_capacity(kept_count);
+        for (word_idx, &word) in mask.words.iter().enumerate() {
+            let mut w = word;
+            while w != 0 {
+                let bit_idx = w.trailing_zeros() as usize;
+                let row_idx = (word_idx << 6) | bit_idx;
+                if row_idx < self.num_rows {
+                    matched_indices.push(row_idx);
+                }
+                w &= w - 1; // BLSR (elimina o bit menos significativo em 1 ciclo)
+            }
+        }
+
         for col in &self.columns {
             match col {
                 IngnesColumn::I64(b) => {
                     let mut out = AlignedBuffer::from_elem(0_i64, kept_count);
-                    let mut out_idx = 0;
-                    for i in 0..self.num_rows {
-                        if mask.get(i) {
-                            out[out_idx] = b[i];
-                            out_idx += 1;
-                        }
+                    let out_slice = out.as_mut_slice();
+                    let in_slice = b.as_slice();
+                    for (out_idx, &row_idx) in matched_indices.iter().enumerate() {
+                        out_slice[out_idx] = in_slice[row_idx];
                     }
                     new_cols.push(IngnesColumn::I64(out));
                 }
                 IngnesColumn::I16(b) => {
                     let mut out = AlignedBuffer::from_elem(0_i16, kept_count);
-                    let mut out_idx = 0;
-                    for i in 0..self.num_rows {
-                        if mask.get(i) {
-                            out[out_idx] = b[i];
-                            out_idx += 1;
-                        }
+                    let out_slice = out.as_mut_slice();
+                    let in_slice = b.as_slice();
+                    for (out_idx, &row_idx) in matched_indices.iter().enumerate() {
+                        out_slice[out_idx] = in_slice[row_idx];
                     }
                     new_cols.push(IngnesColumn::I16(out));
                 }
                 IngnesColumn::I8(b) => {
                     let mut out = AlignedBuffer::from_elem(0_i8, kept_count);
-                    let mut out_idx = 0;
-                    for i in 0..self.num_rows {
-                        if mask.get(i) {
-                            out[out_idx] = b[i];
-                            out_idx += 1;
-                        }
+                    let out_slice = out.as_mut_slice();
+                    let in_slice = b.as_slice();
+                    for (out_idx, &row_idx) in matched_indices.iter().enumerate() {
+                        out_slice[out_idx] = in_slice[row_idx];
                     }
                     new_cols.push(IngnesColumn::I8(out));
                 }
                 IngnesColumn::F64(b) => {
                     let mut out = AlignedBuffer::from_elem(0.0_f64, kept_count);
-                    let mut out_idx = 0;
-                    for i in 0..self.num_rows {
-                        if mask.get(i) {
-                            out[out_idx] = b[i];
-                            out_idx += 1;
-                        }
+                    let out_slice = out.as_mut_slice();
+                    let in_slice = b.as_slice();
+                    for (out_idx, &row_idx) in matched_indices.iter().enumerate() {
+                        out_slice[out_idx] = in_slice[row_idx];
                     }
                     new_cols.push(IngnesColumn::F64(out));
                 }
                 IngnesColumn::I32(b) => {
                     let mut out = AlignedBuffer::from_elem(0_i32, kept_count);
-                    let mut out_idx = 0;
-                    for i in 0..self.num_rows {
-                        if mask.get(i) {
-                            out[out_idx] = b[i];
-                            out_idx += 1;
-                        }
+                    let out_slice = out.as_mut_slice();
+                    let in_slice = b.as_slice();
+                    for (out_idx, &row_idx) in matched_indices.iter().enumerate() {
+                        out_slice[out_idx] = in_slice[row_idx];
                     }
                     new_cols.push(IngnesColumn::I32(out));
                 }
                 IngnesColumn::QDec(b) => {
                     let mut out = AlignedBuffer::from_elem(QDec128::ZERO, kept_count);
-                    let mut out_idx = 0;
-                    for i in 0..self.num_rows {
-                        if mask.get(i) {
-                            out[out_idx] = b[i];
-                            out_idx += 1;
-                        }
+                    let out_slice = out.as_mut_slice();
+                    let in_slice = b.as_slice();
+                    for (out_idx, &row_idx) in matched_indices.iter().enumerate() {
+                        out_slice[out_idx] = in_slice[row_idx];
                     }
                     new_cols.push(IngnesColumn::QDec(out));
                 }

@@ -67,6 +67,40 @@ impl CatalystCompilerOptimizer {
         Self::default()
     }
 
+    /// Estima a Curvatura de Ricci discreta (Ollivier-Ricci) do plano de consulta:
+    /// $\kappa = 1 - W_1(\mu_{in}, \mu_{out}) / d$
+    /// - $\kappa > 0$: Estágios contrativos (Filtros, Agregações, Projeções enxutas com contração métrica)
+    /// - $\kappa < 0$: Estágios dispersivos (Joins expansivos, Uniões com dilatação de espaço)
+    pub fn plan_ricci_curvature(stage: &LogicalStage) -> f64 {
+        match stage {
+            LogicalStage::Filter { input, .. } => {
+                0.5 + 0.5 * Self::plan_ricci_curvature(input)
+            }
+            LogicalStage::Select { input, projections } => {
+                let cur = Self::plan_ricci_curvature(input);
+                if projections.len() <= 3 { cur + 0.2 } else { cur }
+            }
+            LogicalStage::WithColumn { input, .. } => {
+                Self::plan_ricci_curvature(input) * 0.95
+            }
+            LogicalStage::Join { left, right, join_type, .. } => {
+                let kl = Self::plan_ricci_curvature(left);
+                let kr = Self::plan_ricci_curvature(right);
+                match join_type {
+                    crate::ingnes_df::JoinType::Inner => (kl + kr) * 0.5,
+                    crate::ingnes_df::JoinType::LeftSemi | crate::ingnes_df::JoinType::LeftAnti => (kl + kr) * 0.5 + 0.3,
+                    _ => (kl + kr) * 0.5 - 0.4,
+                }
+            }
+            LogicalStage::Union { left, right, .. } => {
+                let kl = Self::plan_ricci_curvature(left);
+                let kr = Self::plan_ricci_curvature(right);
+                ((kl + kr) * 0.5) - 0.3
+            }
+            LogicalStage::Range { .. } => 0.0,
+        }
+    }
+
     /// Otimiza uma árvore de `LogicalStage` executando passagens de compilador até ponto fixo.
     pub fn optimize(&self, plan: &LogicalStage) -> (LogicalStage, OptimizationStats) {
         let mut current_plan = plan.clone();

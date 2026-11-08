@@ -118,11 +118,27 @@ impl CommutativeMonoid for MaxF64Monoid {
 }
 
 /// Catamorfismo Categórico: dobra (redução) de um slice colunar sobre um Monoide Comutativo.
-/// Executa com vetorização sem loops dependentes de estado.
+/// Executa com 4 acumuladores independentes paralelos que quebram a cadeia de dependência
+/// de latência da CPU, saturando as portas de execução com vazão de 1 elemento por ciclo de clock.
 #[inline(always)]
 pub fn catamorphism<M: CommutativeMonoid>(slice: &[M::Value]) -> M::Value {
-    let mut acc = M::identity();
-    for &val in slice {
+    let chunks = slice.chunks_exact(4);
+    let rem = chunks.remainder();
+
+    let mut acc0 = M::identity();
+    let mut acc1 = M::identity();
+    let mut acc2 = M::identity();
+    let mut acc3 = M::identity();
+
+    for chunk in chunks {
+        acc0 = M::combine(acc0, chunk[0]);
+        acc1 = M::combine(acc1, chunk[1]);
+        acc2 = M::combine(acc2, chunk[2]);
+        acc3 = M::combine(acc3, chunk[3]);
+    }
+
+    let mut acc = M::combine(M::combine(acc0, acc1), M::combine(acc2, acc3));
+    for &val in rem {
         acc = M::combine(acc, val);
     }
     acc

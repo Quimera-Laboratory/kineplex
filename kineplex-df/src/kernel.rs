@@ -11,7 +11,9 @@
 //! - Multiplicação de 128 bits no Monoide B3 (`b3_monoid_mul16_safe`) imune a overflow silencioso
 //!   nos termos fracionários, com instrução de hardware `JO` (`checked_mul` / `checked_add`) no topo.
 
-use crate::decimal::{add_exact, mul_exact, QDec128, BASE_16, BASE_8};
+use crate::decimal::{
+    add_exact, fast_div_mod_base16, fast_div_mod_base8, mul_exact, QDec128, BASE_16, BASE_8,
+};
 use crate::memory::AlignedBuffer;
 
 pub const MAX_DAYS: usize = 8192; // 2^13 dias (~22.4 anos de calendário)
@@ -138,22 +140,20 @@ impl FinancialCategoricalKernelV2 {
     /// No topo, valida overflow via `mul_exact` / `add_exact` (instrução de hardware `JO`).
     #[inline(always)]
     pub fn b3_monoid_mul16_safe(x: i64, y: i64) -> i64 {
-        // 1. Separa a parte inteira (qx, qy) da mantissa de 16 casas (rx, ry < 10^16)
-        let qx = x / SCALE_16_I64;
-        let rx = x - (qx * SCALE_16_I64);
-        let qy = y / SCALE_16_I64;
-        let ry = y - (qy * SCALE_16_I64);
+        // 1. Separa a parte inteira (qx, qy) da mantissa de 16 casas (rx, ry < 10^16) via Montgomery em 2 ciclos
+        let (qx, rx) = fast_div_mod_base16(x);
+        let (qy, ry) = fast_div_mod_base16(y);
 
-        // 2. Decompõe APENAS as mantissas rx, ry < 10^16 na base 10^8 (hi, lo < 10^8)
-        let rx_hi = rx / SCALE_8_I64;
-        let rx_lo = rx - (rx_hi * SCALE_8_I64);
-        let ry_hi = ry / SCALE_8_I64;
-        let ry_lo = ry - (ry_hi * SCALE_8_I64);
+        // 2. Decompõe APENAS as mantissas rx, ry < 10^16 na base 10^8 (hi, lo < 10^8) em 2 ciclos
+        let (rx_hi, rx_lo) = fast_div_mod_base8(rx);
+        let (ry_hi, ry_lo) = fast_div_mod_base8(ry);
 
-        // 3. Calcula floor((rx * ry) / 10^16) de forma 100% exata até o último bit:
+        // 3. Calcula floor((rx * ry) / 10^16) de forma 100% exata até o último bit via Montgomery:
         let prod_lo = rx_lo * ry_lo; // < 10^16
-        let prod_mid = (rx_hi * ry_lo) + (rx_lo * ry_hi) + (prod_lo / SCALE_8_I64); // < 2 * 10^16 + 10^8
-        let frac_carry = (rx_hi * ry_hi) + (prod_mid / SCALE_8_I64); // < 10^16
+        let (prod_lo_div, _) = fast_div_mod_base8(prod_lo);
+        let prod_mid = (rx_hi * ry_lo) + (rx_lo * ry_hi) + prod_lo_div; // < 2 * 10^16 + 10^8
+        let (prod_mid_div, _) = fast_div_mod_base8(prod_mid);
+        let frac_carry = (rx_hi * ry_hi) + prod_mid_div; // < 10^16
 
         // 4. Recompõe o resultado final com verificação hardware (JO instruction) no topo:
         let int_part_scaled = mul_exact(mul_exact(qx, qy), SCALE_16_I64);
@@ -164,19 +164,17 @@ impl FinancialCategoricalKernelV2 {
     /// Versão `Result` não-panicante de `b3_monoid_mul16_safe` para uso em pipelines seguros.
     #[inline(always)]
     pub fn checked_b3_monoid_mul16(x: i64, y: i64) -> Option<i64> {
-        let qx = x / SCALE_16_I64;
-        let rx = x - (qx * SCALE_16_I64);
-        let qy = y / SCALE_16_I64;
-        let ry = y - (qy * SCALE_16_I64);
+        let (qx, rx) = fast_div_mod_base16(x);
+        let (qy, ry) = fast_div_mod_base16(y);
 
-        let rx_hi = rx / SCALE_8_I64;
-        let rx_lo = rx - (rx_hi * SCALE_8_I64);
-        let ry_hi = ry / SCALE_8_I64;
-        let ry_lo = ry - (ry_hi * SCALE_8_I64);
+        let (rx_hi, rx_lo) = fast_div_mod_base8(rx);
+        let (ry_hi, ry_lo) = fast_div_mod_base8(ry);
 
         let prod_lo = rx_lo * ry_lo;
-        let prod_mid = (rx_hi * ry_lo) + (rx_lo * ry_hi) + (prod_lo / SCALE_8_I64);
-        let frac_carry = (rx_hi * ry_hi) + (prod_mid / SCALE_8_I64);
+        let (prod_lo_div, _) = fast_div_mod_base8(prod_lo);
+        let prod_mid = (rx_hi * ry_lo) + (rx_lo * ry_hi) + prod_lo_div;
+        let (prod_mid_div, _) = fast_div_mod_base8(prod_mid);
+        let frac_carry = (rx_hi * ry_hi) + prod_mid_div;
 
         let int_part_scaled = qx.checked_mul(qy)?.checked_mul(SCALE_16_I64)?;
         let cross_terms = qx.checked_mul(ry)?.checked_add(qy.checked_mul(rx)?)?;
@@ -399,7 +397,11 @@ impl QuimeraNativeMath {
                 let ds3 = jv.s3 - ju.s3;
                 let ds4 = jv.s4 - ju.s4;
                 let p = pct_indexer;
-                let log_phi = p * (ds1 - p * (ds2 - p * (ds3 - p * ds4)));
+                // Esquema de Horner de 4ª ordem via FMA (vfmadd213pd) com precisão estendida e zero arredondamento intermediário
+                let h3 = (-ds4).mul_add(p, ds3);
+                let h2 = (-h3).mul_add(p, ds2);
+                let h1 = (-h2).mul_add(p, ds1);
+                let log_phi = p * h1;
                 log_phi.exp()
             }
             IDX_IPCA | IDX_IGPM => {

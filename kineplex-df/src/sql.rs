@@ -15,7 +15,6 @@ pub use crate::ingnes_df::JoinType;
 use crate::kernel::FlatBroadcastEngine;
 use crate::memory::{AlignedBuffer, L1D_OPTIMAL_BATCH_SIZE};
 use std::sync::Arc;
-use std::thread;
 
 /// Coluna de Expressão fluente na DSL DataFrame (semelhante ao `org.apache.spark.sql.Column`).
 #[derive(Clone, Debug)]
@@ -384,6 +383,12 @@ pub struct DataFrame {
 }
 
 impl DataFrame {
+    /// Retorna uma referência ao plano lógico de execução do DataFrame.
+    #[inline(always)]
+    pub fn logical_plan(&self) -> &LogicalStage {
+        &self.plan
+    }
+
     /// Injeta projeções nomeadas no DataFrame (`.select(...)`).
     pub fn select(self, fields: Vec<(&str, Column)>) -> Self {
         let projections = fields
@@ -560,6 +565,39 @@ impl DataFrame {
         execute_stage_collect(&opt_plan)
     }
 
+    /// Converte uma coluna do DataFrame em um `BanachFrame` para análise funcional
+    /// em espaços de Sobolev $W^{1,2}$, energia de Dirichlet e wavelets.
+    pub fn to_banach_frame(&self, col_name: &str) -> Result<crate::banach::BanachFrame, String> {
+        let batches = self.collect();
+        let mut values = Vec::new();
+        for b in &batches {
+            if let Some(col_idx) = b.names.iter().position(|n| n == col_name) {
+                match &b.columns[col_idx] {
+                    crate::catalyst::ColumnVector::Double(buf) => {
+                        values.extend_from_slice(buf.as_slice());
+                    }
+                    crate::catalyst::ColumnVector::Long(buf) => {
+                        for &v in buf.as_slice() {
+                            values.push(v as f64);
+                        }
+                    }
+                    crate::catalyst::ColumnVector::Int(buf) => {
+                        for &v in buf.as_slice() {
+                            values.push(v as f64);
+                        }
+                    }
+                    _ => return Err(format!("Coluna '{}' não é numérica compatível", col_name)),
+                }
+            } else {
+                return Err(format!("Coluna '{}' não encontrada no lote", col_name));
+            }
+        }
+        if values.is_empty() {
+            return Err("DataFrame vazio".to_string());
+        }
+        Ok(crate::banach::BanachFrame::new(&values, None))
+    }
+
     fn extract_partitions(&self) -> Vec<RangePartition> {
         match &self.plan {
             LogicalStage::Range { start, end, step, num_partitions } => {
@@ -691,109 +729,167 @@ impl AggregationExecutor {
         }
 
         let partitions = opt_df.extract_partitions();
-        let num_threads = partitions.len();
         let plan = Arc::new(opt_df.plan.clone());
         let aggs = Arc::new(self.aggregations.clone());
 
-        let mut handles = Vec::with_capacity(num_threads);
+        let tasks: Vec<_> = partitions
+            .into_iter()
+            .map(|part| {
+                let plan_ref = Arc::clone(&plan);
+                let aggs_ref = Arc::clone(&aggs);
 
-        for part in partitions {
-            let plan_ref = Arc::clone(&plan);
-            let aggs_ref = Arc::clone(&aggs);
+                move || {
+                    let mut state = PartitionAggState {
+                        count: 0,
+                        sum_map: vec![0.0; aggs_ref.len()],
+                        sum_count_map: vec![0; aggs_ref.len()],
+                    };
 
-            let handle = thread::spawn(move || {
-                let mut state = PartitionAggState {
-                    count: 0,
-                    sum_map: vec![0.0; aggs_ref.len()],
-                    sum_count_map: vec![0; aggs_ref.len()],
-                };
+                    let p_start = part.start;
+                    let p_end = part.end;
+                    let step = part.step;
+                    let mut cur = p_start;
+                    let fused = FusedPipeline::compile(&plan_ref);
 
-                let p_start = part.start;
-                let p_end = part.end;
-                let step = part.step;
-                let mut cur = p_start;
-                let fused = FusedPipeline::compile(&plan_ref);
+                    while cur < p_end {
+                        let batch_end = (cur + (L1D_OPTIMAL_BATCH_SIZE as i64) * step).min(p_end);
+                        let batch_size = ((batch_end - cur) / step) as usize;
 
-                while cur < p_end {
-                    let batch_end = (cur + (L1D_OPTIMAL_BATCH_SIZE as i64) * step).min(p_end);
-                    let batch_size = ((batch_end - cur) / step) as usize;
+                        // Cria o ColumnarBatch da raiz Range com alinhamento de 64 bytes
+                        let mut id_buf = AlignedBuffer::from_elem(0_i64, batch_size);
+                        let id_slice = id_buf.as_mut_slice();
+                        for i in 0..batch_size {
+                            id_slice[i] = cur + (i as i64) * step;
+                        }
 
-                    // Cria o ColumnarBatch da raiz Range com alinhamento de 64 bytes
-                    let mut id_buf = AlignedBuffer::from_elem(0_i64, batch_size);
-                    for i in 0..batch_size {
-                        id_buf[i] = cur + (i as i64) * step;
-                    }
+                        let root_batch = ColumnarBatch::new(
+                            vec!["id".to_string()],
+                            vec![ColumnVector::Long(id_buf)],
+                        );
 
-                    let root_batch = ColumnarBatch::new(
-                        vec!["id".to_string()],
-                        vec![ColumnVector::Long(id_buf)],
-                    );
+                        let evaluated_batch = fused.execute_batch(&root_batch);
+                        let rows = evaluated_batch.num_rows;
+                        state.count += rows as i64;
 
-                    let evaluated_batch = fused.execute_batch(&root_batch);
-                    let rows = evaluated_batch.num_rows;
-                    state.count += rows as i64;
-
-                    // Acumula cada agregação no registrador
-                    for (idx, (_, agg_type)) in aggs_ref.iter().enumerate() {
-                        match agg_type {
-                            Aggregation::Count(_) => {
-                                state.sum_map[idx] += rows as f64;
-                            }
-                            Aggregation::Sum(col_name) => {
-                                let col = evaluated_batch.column(col_name);
-                                match col {
-                                    ColumnVector::Double(d) => {
-                                        let s = d.as_slice();
-                                        let mut local_sum = 0.0_f64;
-                                        for v in s {
-                                            local_sum += *v;
-                                        }
-                                        state.sum_map[idx] += local_sum;
-                                    }
-                                    ColumnVector::Long(l) => {
-                                        let s = l.as_slice();
-                                        let mut local_sum = 0_i64;
-                                        for v in s {
-                                            local_sum += *v;
-                                        }
-                                        state.sum_map[idx] += local_sum as f64;
-                                    }
-                                    _ => panic!("Sum nao suportado para coluna {}", col_name),
+                        // Acumula cada agregação no registrador via 4 acumuladores paralelos
+                        for (idx, (_, agg_type)) in aggs_ref.iter().enumerate() {
+                            match agg_type {
+                                Aggregation::Count(_) => {
+                                    state.sum_map[idx] += rows as f64;
                                 }
-                            }
-                            Aggregation::Avg(col_name) => {
-                                let col = evaluated_batch.column(col_name);
-                                match col {
-                                    ColumnVector::Double(d) => {
-                                        let s = d.as_slice();
-                                        let mut local_sum = 0.0_f64;
-                                        for v in s {
-                                            local_sum += *v;
+                                Aggregation::Sum(col_name) => {
+                                    let col = evaluated_batch.column(col_name);
+                                    match col {
+                                        ColumnVector::Double(d) => {
+                                            let s = d.as_slice();
+                                            let chunks = s.chunks_exact(4);
+                                            let rem = chunks.remainder();
+                                            let mut s0 = 0.0;
+                                            let mut s1 = 0.0;
+                                            let mut s2 = 0.0;
+                                            let mut s3 = 0.0;
+                                            for c in chunks {
+                                                s0 += c[0];
+                                                s1 += c[1];
+                                                s2 += c[2];
+                                                s3 += c[3];
+                                            }
+                                            let mut local_sum = (s0 + s1) + (s2 + s3);
+                                            for &r in rem {
+                                                local_sum += r;
+                                            }
+                                            state.sum_map[idx] += local_sum;
                                         }
-                                        state.sum_map[idx] += local_sum;
-                                        state.sum_count_map[idx] += rows as i64;
+                                        ColumnVector::Long(l) => {
+                                            let s = l.as_slice();
+                                            let chunks = s.chunks_exact(4);
+                                            let rem = chunks.remainder();
+                                            let mut s0 = 0_i64;
+                                            let mut s1 = 0_i64;
+                                            let mut s2 = 0_i64;
+                                            let mut s3 = 0_i64;
+                                            for c in chunks {
+                                                s0 = s0.wrapping_add(c[0]);
+                                                s1 = s1.wrapping_add(c[1]);
+                                                s2 = s2.wrapping_add(c[2]);
+                                                s3 = s3.wrapping_add(c[3]);
+                                            }
+                                            let mut local_sum = s0.wrapping_add(s1).wrapping_add(s2.wrapping_add(s3));
+                                            for &r in rem {
+                                                local_sum = local_sum.wrapping_add(r);
+                                            }
+                                            state.sum_map[idx] += local_sum as f64;
+                                        }
+                                        _ => panic!("Sum nao suportado para coluna {}", col_name),
                                     }
-                                    _ => panic!("Avg suportado apenas para Double"),
+                                }
+                                Aggregation::Avg(col_name) => {
+                                    let col = evaluated_batch.column(col_name);
+                                    match col {
+                                        ColumnVector::Double(d) => {
+                                            let s = d.as_slice();
+                                            let chunks = s.chunks_exact(4);
+                                            let rem = chunks.remainder();
+                                            let mut s0 = 0.0;
+                                            let mut s1 = 0.0;
+                                            let mut s2 = 0.0;
+                                            let mut s3 = 0.0;
+                                            for c in chunks {
+                                                s0 += c[0];
+                                                s1 += c[1];
+                                                s2 += c[2];
+                                                s3 += c[3];
+                                            }
+                                            let mut local_sum = (s0 + s1) + (s2 + s3);
+                                            for &r in rem {
+                                                local_sum += r;
+                                            }
+                                            state.sum_map[idx] += local_sum;
+                                            state.sum_count_map[idx] += rows as i64;
+                                        }
+                                        ColumnVector::Long(l) => {
+                                            let s = l.as_slice();
+                                            let chunks = s.chunks_exact(4);
+                                            let rem = chunks.remainder();
+                                            let mut s0 = 0_i64;
+                                            let mut s1 = 0_i64;
+                                            let mut s2 = 0_i64;
+                                            let mut s3 = 0_i64;
+                                            for c in chunks {
+                                                s0 = s0.wrapping_add(c[0]);
+                                                s1 = s1.wrapping_add(c[1]);
+                                                s2 = s2.wrapping_add(c[2]);
+                                                s3 = s3.wrapping_add(c[3]);
+                                            }
+                                            let mut local_sum = s0.wrapping_add(s1).wrapping_add(s2.wrapping_add(s3));
+                                            for &r in rem {
+                                                local_sum = local_sum.wrapping_add(r);
+                                            }
+                                            state.sum_map[idx] += local_sum as f64;
+                                            state.sum_count_map[idx] += rows as i64;
+                                        }
+                                        _ => panic!("Avg suportado apenas para Double e Long"),
+                                    }
                                 }
                             }
                         }
+
+                        cur = batch_end;
                     }
 
-                    cur = batch_end;
+                    state
                 }
+            })
+            .collect();
 
-                state
-            });
-            handles.push(handle);
-        }
+        let partition_states = crate::concurrency::global_thread_pool().execute_parallel(tasks);
 
         // Consolida os resultados parciais de todas as partições (Redução Final)
         let mut final_sum_map = vec![0.0_f64; self.aggregations.len()];
         let mut final_count_map = vec![0_i64; self.aggregations.len()];
         let mut total_count = 0_i64;
 
-        for h in handles {
-            let part_state = h.join().expect("Falha ao aguardar thread de particao");
+        for part_state in partition_states {
             total_count += part_state.count;
             for i in 0..self.aggregations.len() {
                 final_sum_map[i] += part_state.sum_map[i];
@@ -981,9 +1077,18 @@ pub fn execute_stage_collect(stage: &LogicalStage) -> Vec<ColumnarBatch> {
                 },
             };
             let partitions = df.extract_partitions();
+            let stage_arc = Arc::new(stage.clone());
+            let tasks: Vec<_> = partitions
+                .into_iter()
+                .map(|part| {
+                    let st = Arc::clone(&stage_arc);
+                    move || execute_partition_range(part, &st)
+                })
+                .collect();
+            let partition_results = crate::concurrency::global_thread_pool().execute_parallel(tasks);
             let mut results = Vec::new();
-            for part in partitions {
-                results.extend(execute_partition_range(part, stage));
+            for part_res in partition_results {
+                results.extend(part_res);
             }
             results
         }
