@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Silo Unification Comparative Benchmark (`docs/benchmarks/benchmark_unificacao_silos_vs_kineplex.md`)**:
+  - Full reproducible benchmark measuring KinePlex `BanachFrame` against the 4 fragmented data silos (Kafka/Flink SerDe, TimescaleDB sliding windows, Vector DB unpruned scans, and Volcano relational iteration).
+  - Empirical proof of 3.12x streaming speedup, 1340x+ time series Dirichlet acceleration, 96.75% vector pruning ratio, and zero bytes heap allocations in hot loop vs 3.17 MB heap thrashing in Frankenstein multi-hop.
+  - Automated CI integration exporting both JSON metrics (`benchmark_silos_metrics.json`) and Markdown summaries to `$GITHUB_STEP_SUMMARY`.
 - **Post-Banach Topological Performance CI Pipeline (`.github/workflows/perf-post-banach.yml`)**:
   - Automated GitHub Actions performance testing workflow running on push/PR with native CPU flags (`-C target-cpu=native`).
   - Interactive **GitHub Step Summary** dashboard displaying real-time metrics, composite BTEA scores, and topological pruning acceleration tables directly in GitHub UI.

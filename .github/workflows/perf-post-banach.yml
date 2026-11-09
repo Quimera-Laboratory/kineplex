@@ -42,26 +42,29 @@ jobs:
         run: |
           cargo test -p kineplex-df --test post_banach_perf --release -- --nocapture
 
-      - name: Run Post-Banach Benchmark Harness & BTEA Score
+      - name: Run Post-Banach Benchmark Harness & Silo Unification Comparison
         run: |
           mkdir -p target/perf-reports
           cargo run -p kineplex-df --bin post_banach_bench --release -- \
             --frames 50 \
-            --json target/perf-reports/post-banach-metrics.json \
-            --markdown target/perf-reports/post-banach-summary.md
+            --json target/perf-reports/benchmark_silos_metrics.json \
+            --markdown target/perf-reports/post-banach-summary.md \
+            --silos-markdown target/perf-reports/benchmark_unificacao_silos_vs_kineplex.md
 
-      - name: Publish Performance Report to GitHub Step Summary
+      - name: Publish Performance & Silos Report to GitHub Step Summary
         if: always()
         run: |
           if [ -f target/perf-reports/post-banach-summary.md ]; then
             cat target/perf-reports/post-banach-summary.md >> $GITHUB_STEP_SUMMARY
-          else
-            echo "### ⚠️ Relatório de performance pós-Banach não encontrado." >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -f target/perf-reports/benchmark_unificacao_silos_vs_kineplex.md ]; then
+            echo -e "\n---\n" >> $GITHUB_STEP_SUMMARY
+            cat target/perf-reports/benchmark_unificacao_silos_vs_kineplex.md >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Verify Performance Regression Gate
         run: |
-          METRICS_FILE="target/perf-reports/post-banach-metrics.json"
+          METRICS_FILE="target/perf-reports/benchmark_silos_metrics.json"
           if [ ! -f "$METRICS_FILE" ]; then
             echo "❌ Arquivo de telemetria não encontrado: $METRICS_FILE"
             exit 1
