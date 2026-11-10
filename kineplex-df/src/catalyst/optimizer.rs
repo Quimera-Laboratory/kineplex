@@ -54,17 +54,29 @@ impl OptimizationStats {
 /// Otimizador Catalyst com arquitetura multi-pass até ponto fixo.
 pub struct CatalystCompilerOptimizer {
     pub max_iterations: usize,
+    /// Liga os passes de `catalyst::algebra` (canonicalização por simetria etc.).
+    /// Padrão `false`: com a flag desligada o comportamento é idêntico ao anterior.
+    pub algebraic: bool,
 }
 
 impl Default for CatalystCompilerOptimizer {
     fn default() -> Self {
-        Self { max_iterations: 8 }
+        Self {
+            max_iterations: 8,
+            algebraic: false,
+        }
     }
 }
 
 impl CatalystCompilerOptimizer {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Habilita ou desabilita os passes algébricos opcionais (`catalyst::algebra`).
+    pub fn with_algebraic(mut self, enabled: bool) -> Self {
+        self.algebraic = enabled;
+        self
     }
 
     /// Estima a Curvatura de Ricci discreta (Ollivier-Ricci) do plano de consulta:
@@ -106,6 +118,14 @@ impl CatalystCompilerOptimizer {
         let mut current_plan = plan.clone();
         let mut total_stats = OptimizationStats::default();
 
+        // Pass 0 (opcional): canonicalização por simetria, adotada apenas nos `Select` em que
+        // expõe subexpressões compartilhadas lucrativas para o CSE. Roda uma única vez antes do
+        // ponto fixo: é idempotente e contar subexpressões a cada iteração estourava o teto de
+        // tempo de otimização (medido pelo `algebra_gate`).
+        if self.algebraic {
+            current_plan = crate::catalyst::algebra::canonicalize_stage_targeted(&current_plan);
+        }
+
         for pass in 0..self.max_iterations {
             let mut pass_stats = OptimizationStats::default();
 
@@ -114,6 +134,16 @@ impl CatalystCompilerOptimizer {
 
             // Pass 2: Predicate Pushdown (Empurra Filter abaixo de WithColumn / Projections)
             current_plan = self.push_down_predicates(current_plan, &mut pass_stats);
+
+            // Pass 2.5 (opcional): Interpretação Abstrata & Poda de Galois de Intervalos (Absdom)
+            if self.algebraic {
+                let mut env = crate::catalyst::algebra::AbstractEnv::new();
+                let (simplified, changed) = crate::catalyst::algebra::simplify_stage_with_absdom(&current_plan, &mut env);
+                if changed {
+                    pass_stats.constants_folded += 1;
+                    current_plan = simplified;
+                }
+            }
 
             // Pass 3: Common Subexpression Elimination (CSE)
             current_plan = self.eliminate_common_subexpressions(current_plan, &mut pass_stats);
@@ -1047,7 +1077,7 @@ impl CatalystCompilerOptimizer {
     ) -> LogicalStage {
         match stage {
             LogicalStage::Select { input, projections } => {
-                let mut freq_map: HashMap<Expression, usize> = HashMap::new();
+                let mut freq_map: HashMap<&Expression, usize> = HashMap::new();
                 for (_, expr) in &projections {
                     count_subexpressions(expr, &mut freq_map);
                 }
@@ -1055,8 +1085,14 @@ impl CatalystCompilerOptimizer {
                 // Identifica subexpressões candidatas a CSE (profundidade >= 2 e contagem >= 2)
                 let mut candidates: Vec<Expression> = freq_map
                     .into_iter()
-                    .filter(|(expr, count)| *count >= 2 && expr.depth() >= 2)
-                    .map(|(expr, _)| expr)
+                    .filter(|(expr, count)| {
+                        *count >= 2
+                            && expr.depth() >= 2
+                            // Com a flag algébrica, só materializa se recalcular custar mais
+                            // do que gravar e reler a coluna (ver `cse_is_profitable`).
+                            && (!self.algebraic || cse_is_profitable(expr, *count))
+                    })
+                    .map(|(expr, _)| expr.clone())
                     .collect();
 
                 // Ordena por tamanho decrescente para substituir sub-árvores maiores primeiro
@@ -1261,9 +1297,49 @@ impl CatalystCompilerOptimizer {
 }
 
 /// Conta frequência de subexpressões de profundidade >= 2.
-fn count_subexpressions(expr: &Expression, freq: &mut HashMap<Expression, usize>) {
+/// Custo relativo (em ciclos aproximados por linha) de materializar uma subexpressão como
+/// coluna sintética: uma gravação e uma releitura de coluna inteira.
+const CSE_MATERIALIZE_COST: u32 = 4;
+
+/// Custo relativo por linha de avaliar uma expressão (folhas são gratuitas).
+fn eval_cost(expr: &Expression) -> u32 {
+    use Expression as E;
+    match expr {
+        E::Literal(_) | E::Column(_) => 0,
+        E::Div(l, r) | E::Mod(l, r) => 25 + eval_cost(l) + eval_cost(r),
+        E::Round(e, _) => 10 + eval_cost(e),
+        E::QuimeraFactor { .. } => 40,
+        E::Not(e) | E::Cast { expr: e, .. } => 1 + eval_cost(e),
+        E::Add(l, r)
+        | E::Sub(l, r)
+        | E::Mul(l, r)
+        | E::BitAnd(l, r)
+        | E::BitOr(l, r)
+        | E::BitXor(l, r)
+        | E::BitShiftLeft(l, r)
+        | E::BitShiftRight(l, r)
+        | E::And(l, r)
+        | E::Or(l, r)
+        | E::Eq(l, r)
+        | E::Neq(l, r)
+        | E::Lt(l, r)
+        | E::Lte(l, r)
+        | E::Gt(l, r)
+        | E::Gte(l, r) => 1 + eval_cost(l) + eval_cost(r),
+        E::WhenOtherwise { condition, if_true, if_false } => {
+            2 + eval_cost(condition) + eval_cost(if_true) + eval_cost(if_false)
+        }
+    }
+}
+
+/// O CSE só compensa se as `count - 1` reavaliações evitadas custarem mais que a materialização.
+pub(crate) fn cse_is_profitable(expr: &Expression, count: usize) -> bool {
+    (count as u32).saturating_sub(1) * eval_cost(expr) > CSE_MATERIALIZE_COST
+}
+
+pub(crate) fn count_subexpressions<'a>(expr: &'a Expression, freq: &mut HashMap<&'a Expression, usize>) {
     if expr.depth() >= 2 {
-        *freq.entry(expr.clone()).or_insert(0) += 1;
+        *freq.entry(expr).or_insert(0) += 1;
     }
     match expr {
         Expression::Add(l, r)

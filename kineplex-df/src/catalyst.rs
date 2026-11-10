@@ -29,6 +29,7 @@ use crate::memory::AlignedBuffer;
 use std::collections::HashSet;
 use std::sync::Arc;
 
+pub mod algebra;
 pub mod fusion;
 pub mod optimizer;
 

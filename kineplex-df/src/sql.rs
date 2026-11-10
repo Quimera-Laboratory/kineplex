@@ -545,7 +545,12 @@ impl DataFrame {
 
     /// Otimiza a árvore de execução com o Catalyst Compiler Optimizer.
     pub fn optimize(self) -> Self {
-        let optimizer = CatalystCompilerOptimizer::new();
+        self.optimize_with(&CatalystCompilerOptimizer::new())
+    }
+
+    /// Como [`DataFrame::optimize`], mas com um otimizador configurável
+    /// (ex.: `CatalystCompilerOptimizer::new().with_algebraic(true)`).
+    pub fn optimize_with(self, optimizer: &CatalystCompilerOptimizer) -> Self {
         let (opt_plan, _) = optimizer.optimize(&self.plan);
         DataFrame { plan: opt_plan }
     }
@@ -560,7 +565,11 @@ impl DataFrame {
 
     /// Coleta os dados para a memória (apenas para dataframes pequenos ou testes).
     pub fn collect(&self) -> Vec<ColumnarBatch> {
-        let optimizer = CatalystCompilerOptimizer::new();
+        self.collect_with(&CatalystCompilerOptimizer::new())
+    }
+
+    /// Como [`DataFrame::collect`], mas com um otimizador configurável.
+    pub fn collect_with(&self, optimizer: &CatalystCompilerOptimizer) -> Vec<ColumnarBatch> {
         let (opt_plan, _) = optimizer.optimize(&self.plan);
         execute_stage_collect(&opt_plan)
     }
@@ -647,7 +656,11 @@ struct PartitionAggState {
 impl AggregationExecutor {
     /// Executa a agregação paralela usando todas as CPUs e retorna a linha agregada final.
     pub fn collect(&self) -> Vec<Row> {
-        let optimizer = CatalystCompilerOptimizer::new();
+        self.collect_with(&CatalystCompilerOptimizer::new())
+    }
+
+    /// Como [`AggregationExecutor::collect`], mas com um otimizador configurável.
+    pub fn collect_with(&self, optimizer: &CatalystCompilerOptimizer) -> Vec<Row> {
         let (opt_plan, _) = optimizer.optimize(&self.df.plan);
         let opt_df = DataFrame { plan: opt_plan };
 
