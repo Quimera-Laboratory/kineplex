@@ -64,6 +64,8 @@ tracing-subscriber = "0.3"
 chrono = { version = "=0.4.31", features = ["serde"] }
 arrow = { version = "46.0", features = ["ipc"] }
 arrow-array = "46.0"
-parquet = "46.0"
+parquet = { version = "46.0", features = ["async"] }
 parking_lot = "0.12"
 wasmtime = "17.0"
+object_store = "0.7"
+bytemuck = "1.14"

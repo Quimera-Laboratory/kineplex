@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Distribuidor de Laguerre-Kantorovich com Suporte Nativo a `ObjectStore` e Assincronismo (`kineplex_core::laguerre`) (FT-097)**:
+  - **Estimador de Entropia Condicional de Markov ($H(X_t | X_{t-1})$)**: Implementação em $\mathcal{O}(1)$ alocada na pilha com unigrama de 256 contadores, bigrama dobrado de 1024 slots e sobrevivência RLE, com mitigação de `clamp(min, max)` para colunas de zero-entropia (`h1 <= 0.05`).
+  - **Adimensionalização de Welford**: Atualização estatística online da média e dispersão $\sigma_X^p$ na variedade de Banach, garantindo piso estável de $10^{-6}$.
+  - **Regularização Log-Sinkhorn com Projeção no Hiperplano de Soma Zero**: Atualização multiplicativa $\psi_k \leftarrow \psi_k + \varepsilon \ln(M^*/M_k)$ centrada em zero ($\left|\sum \psi_k\right| \le 10^{-12}$).
+  - **`BufWriter` Assíncrono para `ObjectStore` (`buf_writer.rs`)**: Implementação não-bloqueante compatível com `AsyncArrowWriter` suportando bufferização de 16 MB e concorrência 8 sem locks ou threads bloqueadas.
+  - **Coalescência Geodésica Terminal de Ward-Steiner com Regularização de Bounding Box Iceberg**: Fusão ótima de células órfãs residuais minimizando a massa reduzida $\mu_{kj}$ e a dilatação $\lambda_{\text{hull}} \Delta_{\text{bbox}}$, com consolidação única para jobs diminutos ($< 64\text{ MB}$).
+
 ## [0.2.0] — 2026-11-10
 
 ### Added

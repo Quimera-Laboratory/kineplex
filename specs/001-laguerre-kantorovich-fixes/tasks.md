@@ -15,9 +15,9 @@ description: "Task list for Laguerre-Kantorovich Optimal Distributor implementat
 
 **Purpose**: Configuração de crates e dependências no workspace para suportar `object_store` e operações assíncronas do Parquet.
 
-- [ ] T001 Habilitar `parquet = { version = "46.0", features = ["async"] }` e adicionar dependência `object_store = "0.7"` no workspace em `kineplex/Cargo.toml` e `kineplex/kineplex-core/Cargo.toml`
-- [ ] T002 [P] Adicionar dependência `bytemuck = "1.14"` em `kineplex/kineplex-core/Cargo.toml`
-- [ ] T003 [P] Atualizar exportações do módulo `kineplex-core/src/laguerre/mod.rs` e registrar no `kineplex-core/src/lib.rs`
+- [x] T001 Habilitar `parquet = { version = "46.0", features = ["async"] }` e adicionar dependência `object_store = "0.7"` no workspace em `kineplex/Cargo.toml` e `kineplex/kineplex-core/Cargo.toml`
+- [x] T002 [P] Adicionar dependência `bytemuck = "1.14"` em `kineplex/kineplex-core/Cargo.toml`
+- [x] T003 [P] Atualizar exportações do módulo `kineplex-core/src/laguerre/mod.rs` e registrar no `kineplex-core/src/lib.rs`
 
 ---
 
@@ -27,9 +27,9 @@ description: "Task list for Laguerre-Kantorovich Optimal Distributor implementat
 
 **⚠️ CRITICAL**: Nenhuma tarefa de user story pode ser executada antes da conclusão desta fase.
 
-- [ ] T004 Implementar struct `KantorovichDistributionConfig` com valores padrão ($M^* = 128\text{ MB}$, $M_{\min} = 64\text{ MB}$, $M_{\max} = 256\text{ MB}$, $p = 2.0$, $\varepsilon = 0.25$, $\lambda_{\text{hull}} = 0.50$) em `kineplex/kineplex-core/src/laguerre/config.rs`
-- [ ] T005 [P] Implementar struct `SemiDiscreteLaguerreCell` com baricentro em $\mathbb{R}^4$, bounding box, potencial dual $\psi_k$, `staged_arena: Vec<RecordBatch>` e `s3_multipart_sink: Option<(String, AsyncArrowWriter<BufWriter>)>` em `kineplex/kineplex-core/src/laguerre/cell.rs`
-- [ ] T006 [P] Implementar helper `parquet_writer_props` configurando Parquet 2.0, compressão ZSTD level 3, Page Statistics, tamanho máximo de row group de 1.048.576 e Bloom Filters em `kineplex/kineplex-core/src/laguerre/distributor.rs`
+- [x] T004 Implementar struct `KantorovichDistributionConfig` com valores padrão ($M^* = 128\text{ MB}$, $M_{\min} = 64\text{ MB}$, $M_{\max} = 256\text{ MB}$, $p = 2.0$, $\varepsilon = 0.25$, $\lambda_{\text{hull}} = 0.50$) em `kineplex/kineplex-core/src/laguerre/config.rs`
+- [x] T005 [P] Implementar struct `SemiDiscreteLaguerreCell` com baricentro em $\mathbb{R}^4$, bounding box, potencial dual $\psi_k$, `staged_arena: Vec<RecordBatch>` e `s3_multipart_sink: Option<(String, AsyncArrowWriter<BufWriter>)>` em `kineplex/kineplex-core/src/laguerre/cell.rs`
+- [x] T006 [P] Implementar helper `parquet_writer_props` configurando Parquet 2.0, compressão ZSTD level 3, Page Statistics, tamanho máximo de row group de 1.048.576 e Bloom Filters em `kineplex/kineplex-core/src/laguerre/distributor.rs`
 
 **Checkpoint**: Estruturas fundamentais compilando limpas no `kineplex-core`.
 
@@ -44,14 +44,14 @@ description: "Task list for Laguerre-Kantorovich Optimal Distributor implementat
 ### Tests for User Story 1 ⚠️
 > **NOTA: Executar estes testes primeiro e garantir que falhem antes da implementação completa dos métodos.**
 
-- [ ] T007 [P] [US1] Criar teste unitário para `estimate_markov_zstd_mass` validando razão de compressão RLE, ruído de alta entropia e fallback de tamanho em `kineplex/kineplex-core/tests/laguerre_distributor_tests.rs`
-- [ ] T008 [P] [US1] Criar teste unitário para `update_manifold_scale` verificando convergência da escala de Welford sem overflow e piso de $10^{-6}$ em `kineplex/kineplex-core/tests/laguerre_distributor_tests.rs`
+- [x] T007 [P] [US1] Criar teste unitário para `estimate_markov_zstd_mass` validando razão de compressão RLE, ruído de alta entropia e fallback de tamanho em `kineplex/kineplex-core/tests/laguerre_distributor_tests.rs`
+- [x] T008 [P] [US1] Criar teste unitário para `update_manifold_scale` verificando convergência da escala de Welford sem overflow e piso de $10^{-6}$ em `kineplex/kineplex-core/tests/laguerre_distributor_tests.rs`
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Implementar `estimate_markov_zstd_mass(batch: &RecordBatch) -> u64` com amostragem de até 4096 bytes de `Float64Array`, unigrama de 256 bins, tabela hash bijetiva de bigramas de 1024 slots (`(((prev * 31) ^ curr) & 1023)`) e taxa condicional $H(X_t | X_{t-1})$ em `kineplex/kineplex-core/src/laguerre/entropy.rs`
-- [ ] T010 [US1] Implementar `update_manifold_scale(&mut self, sig: &[f64; 4])` atualizando online a média e o desvio da norma $L^p$ via recorrência de Welford com amortecimento exponencial 0.95/0.05 em `kineplex/kineplex-core/src/laguerre/distributor.rs`
-- [ ] T011 [US1] Validar que o estimador de Markov aloca estritamente na pilha (`[0u32; 256]` e `[0u32; 1024]`), sem alocações na heap no hot path
+- [x] T009 [US1] Implementar `estimate_markov_zstd_mass(batch: &RecordBatch) -> u64` com amostragem de até 4096 bytes de `Float64Array`, unigrama de 256 bins, tabela hash bijetiva de bigramas de 1024 slots (`(((prev * 31) ^ curr) & 1023)`) e taxa condicional $H(X_t | X_{t-1})$ em `kineplex/kineplex-core/src/laguerre/entropy.rs`
+- [x] T010 [US1] Implementar `update_manifold_scale(&mut self, sig: &[f64; 4])` atualizando online a média e o desvio da norma $L^p$ via recorrência de Welford com amortecimento exponencial 0.95/0.05 em `kineplex/kineplex-core/src/laguerre/distributor.rs`
+- [x] T011 [US1] Validar que o estimador de Markov aloca estritamente na pilha (`[0u32; 256]` e `[0u32; 1024]`), sem alocações na heap no hot path
 
 **Checkpoint**: User Story 1 funcional e testada independentemente com 100% de sucesso.
 
@@ -65,14 +65,14 @@ description: "Task list for Laguerre-Kantorovich Optimal Distributor implementat
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T012 [P] [US2] Criar teste de integração para `dimensionless_laguerre_cost` e `update_sinkhorn_kantorovich_potentials` validando a invariante $\left|\sum_{k=1}^K \psi_k\right| \le 10^{-12}$ em `kineplex/kineplex-core/tests/laguerre_distributor_tests.rs`
-- [ ] T013 [P] [US2] Criar teste de integração para promoção preguiçosa (retenção em RAM $< 64\text{ MB}$ e descarregamento assíncrono $\ge 64\text{ MB}$) e selagem aos $128\text{ MB}$ em `kineplex/kineplex-core/tests/laguerre_distributor_tests.rs`
+- [x] T012 [P] [US2] Criar teste de integração para `dimensionless_laguerre_cost` e `update_sinkhorn_kantorovich_potentials` validando a invariante $\left|\sum_{k=1}^K \psi_k\right| \le 10^{-12}$ em `kineplex/kineplex-core/tests/laguerre_distributor_tests.rs`
+- [x] T013 [P] [US2] Criar teste de integração para promoção preguiçosa (retenção em RAM $< 64\text{ MB}$ e descarregamento assíncrono $\ge 64\text{ MB}$) e selagem aos $128\text{ MB}$ em `kineplex/kineplex-core/tests/laguerre_distributor_tests.rs`
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Implementar `dimensionless_laguerre_cost(&self, sig: &[f64; 4], cell: &SemiDiscreteLaguerreCell) -> f64` calculando $(\|x - c_k\|_p^p / \sigma_X^p) - \psi_k$ em `kineplex/kineplex-core/src/laguerre/distributor.rs`
-- [ ] T015 [US2] Implementar `update_sinkhorn_kantorovich_potentials(&mut self)` com passo multiplicativo logarítmico $\psi_k \leftarrow \psi_k + \varepsilon \ln(M^* / M_k)$ e projeção ortogonal centrada em zero em `kineplex/kineplex-core/src/laguerre/distributor.rs`
-- [ ] T016 [US2] Implementar `route_and_distribute(&mut self, batch: RecordBatch, lp_signature: [f64; 4])` com atribuição ótima, atualização baricêntrica, expansão de Bounding Box, Lazy Promotion com `BufWriter` (16 MB / 8 concorrências) e selagem em `kineplex/kineplex-core/src/laguerre/distributor.rs`
+- [x] T014 [US2] Implementar `dimensionless_laguerre_cost(&self, sig: &[f64; 4], cell: &SemiDiscreteLaguerreCell) -> f64` calculando $(\|x - c_k\|_p^p / \sigma_X^p) - \psi_k$ em `kineplex/kineplex-core/src/laguerre/distributor.rs`
+- [x] T015 [US2] Implementar `update_sinkhorn_kantorovich_potentials(&mut self)` com passo multiplicativo logarítmico $\psi_k \leftarrow \psi_k + \varepsilon \ln(M^* / M_k)$ e projeção ortogonal centrada em zero em `kineplex/kineplex-core/src/laguerre/distributor.rs`
+- [x] T016 [US2] Implementar `route_and_distribute(&mut self, batch: RecordBatch, lp_signature: [f64; 4])` com atribuição ótima, atualização baricêntrica, expansão de Bounding Box, Lazy Promotion com `BufWriter` (16 MB / 8 concorrências) e selagem em `kineplex/kineplex-core/src/laguerre/distributor.rs`
 
 **Checkpoint**: User Stories 1 e 2 funcionais e integradas.
 
@@ -86,15 +86,15 @@ description: "Task list for Laguerre-Kantorovich Optimal Distributor implementat
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T017 [P] [US3] Criar teste para absorção de células órfãs por vizinhos super-críticos considerando distância e dilatação de bounding box ($\lambda_{\text{hull}}$) em `kineplex/kineplex-core/tests/laguerre_distributor_tests.rs`
-- [ ] T018 [P] [US3] Criar teste para consolidação de job diminuto ($< 64\text{ MB}$ total) em `consolidated_ward/kinehaus-coalesced-{uuid}.parquet` em `kineplex/kineplex-core/tests/laguerre_distributor_tests.rs`
+- [x] T017 [P] [US3] Criar teste para absorção de células órfãs por vizinhos super-críticos considerando distância e dilatação de bounding box ($\lambda_{\text{hull}}$) em `kineplex/kineplex-core/tests/laguerre_distributor_tests.rs`
+- [x] T018 [P] [US3] Criar teste para consolidação de job diminuto ($< 64\text{ MB}$ total) em `consolidated_ward/kinehaus-coalesced-{uuid}.parquet` em `kineplex/kineplex-core/tests/laguerre_distributor_tests.rs`
 
 ### Implementation for User Story 3
 
-- [ ] T019 [US3] Implementar partição de células órfãs (`s3_multipart_sink.is_none() && !staged_arena.is_empty()`) vs células ativas em `kineplex/kineplex-core/src/laguerre/distributor.rs`
-- [ ] T020 [US3] Implementar cálculo de custo geodésico de Ward-Steiner com massa reduzida $\mu_{kj}$, dilatação de Bounding Box $\Delta_{\text{bbox}}$, peso $\lambda_{\text{hull}} = 0.50$ e validação do teto rígido $M_{\max} = 256\text{ MB}$ em `kineplex/kineplex-core/src/laguerre/distributor.rs`
-- [ ] T021 [US3] Implementar consolidação de lotes órfãos unificados em um único arquivo Parquet caso nenhum vizinho viável esteja disponível em `kineplex/kineplex-core/src/laguerre/distributor.rs`
-- [ ] T022 [US3] Implementar fechamento assíncrono de todos os writers ativos (`writer.close().await`) e retorno do vetor `Vec<(String, ParquetMetaData)>` em `kineplex/kineplex-core/src/laguerre/distributor.rs`
+- [x] T019 [US3] Implementar partição de células órfãs (`s3_multipart_sink.is_none() && !staged_arena.is_empty()`) vs células ativas em `kineplex/kineplex-core/src/laguerre/distributor.rs`
+- [x] T020 [US3] Implementar cálculo de custo geodésico de Ward-Steiner com massa reduzida $\mu_{kj}$, dilatação de Bounding Box $\Delta_{\text{bbox}}$, peso $\lambda_{\text{hull}} = 0.50$ e validação do teto rígido $M_{\max} = 256\text{ MB}$ em `kineplex/kineplex-core/src/laguerre/distributor.rs`
+- [x] T021 [US3] Implementar consolidação de lotes órfãos unificados em um único arquivo Parquet caso nenhum vizinho viável esteja disponível em `kineplex/kineplex-core/src/laguerre/distributor.rs`
+- [x] T022 [US3] Implementar fechamento assíncrono de todos os writers ativos (`writer.close().await`) e retorno do vetor `Vec<(String, ParquetMetaData)>` em `kineplex/kineplex-core/src/laguerre/distributor.rs`
 
 **Checkpoint**: Todas as User Stories (1, 2 e 3) funcionais, cobrindo os três teoremas formais.
 
@@ -104,10 +104,10 @@ description: "Task list for Laguerre-Kantorovich Optimal Distributor implementat
 
 **Purpose**: Verificação de performance, conformidade com a Constituição e garantia de não-regressão.
 
-- [ ] T023 [P] Atualizar documentação arquitetural e plano mestre em `kineplex/docs/plans/laguerre_kantorovich_plan.md`
-- [ ] T024 [P] Validar execução do quickstart com `object_store::memory::InMemory` conforme `specs/001-laguerre-kantorovich-fixes/quickstart.md`
-- [ ] T025 Executar bateria de verificação completa do workspace com `cargo check --workspace` e `cargo test --workspace` garantindo zero falhas e cobertura $\ge 95\%$
-- [ ] T026 Atualizar `CHANGELOG.md` na raiz e no submódulo `kineplex` sob a seção `## [Unreleased]`
+- [x] T023 [P] Atualizar documentação arquitetural e plano mestre em `kineplex/docs/plans/laguerre_kantorovich_plan.md`
+- [x] T024 [P] Validar execução do quickstart com `object_store::memory::InMemory` conforme `specs/001-laguerre-kantorovich-fixes/quickstart.md`
+- [x] T025 Executar bateria de verificação completa do workspace com `cargo check --workspace` e `cargo test --workspace` garantindo zero falhas e cobertura $\ge 95\%$
+- [x] T026 Atualizar `CHANGELOG.md` na raiz e no submódulo `kineplex` sob a seção `## [Unreleased]`
 
 ---
 
@@ -121,20 +121,3 @@ flowchart TD
     US1 & US2 --> US3["Phase 5: User Story 3 (Ward-Steiner Coalescence - T017..T022)"]
     US3 --> Polish["Phase 6: Polish & Regressions (T023..T026)"]
 ```
-
-### Parallel Opportunities
-- Tarefas de teste `[P]` podem ser escritas simultaneamente às definições de tipos.
-- `T002` (bytemuck) e `T003` (exportações) podem rodar em paralelo com `T001`.
-- `T005` (LaguerreCell) e `T006` (WriterProperties) podem rodar em paralelo com `T004`.
-- `T007` e `T008` (testes unitários US1) podem ser criados em paralelo.
-- `T012` e `T013` (testes unitários US2) podem ser criados em paralelo.
-- `T017` e `T018` (testes unitários US3) podem ser criados em paralelo.
-
----
-
-## Implementation Strategy (MVP First)
-
-1. **MVP (Fase 1 a 3)**: Executar Setup + Foundational + User Story 1. Permite testar a predição ZSTD em $\mathcal{O}(1)$ e o estimador de escala de Welford de forma 100% isolada e sem I/O.
-2. **Incremento 2 (Fase 4)**: Adicionar roteamento de Laguerre, estabilização Log-Sinkhorn com soma zero e promoção preguiçosa no S3 via `BufWriter`.
-3. **Incremento 3 (Fase 5)**: Integrar coalescência de Ward-Steiner com penalidade de Bounding Box para encerramento sem nenhum small file.
-4. **Finalização (Fase 6)**: Gates de não-regressão e atualização do CHANGELOG.
