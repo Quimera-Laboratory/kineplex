@@ -16,6 +16,7 @@ pub mod budget;
 pub mod error;
 pub mod geometry;
 pub mod coalesce;
+pub mod laguerre;
 
 pub use error::{CoreError, Result};
 
