@@ -15,6 +15,7 @@ anyhow.workspace = true
 tracing.workspace = true
 arrow.workspace = true
 arrow-array.workspace = true
+rayon = "1.8"
 parquet.workspace = true
 wasmtime.workspace = true
 

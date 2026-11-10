@@ -15,6 +15,7 @@ pub mod job_registry;
 pub mod budget;
 pub mod error;
 pub mod geometry;
+pub mod coalesce;
 
 pub use error::{CoreError, Result};
 
