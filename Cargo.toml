@@ -12,7 +12,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["KinePlex Team"]
 license = "MIT"
@@ -33,23 +33,23 @@ debug = true
 
 [workspace.dependencies]
 # Core
-kineplex-core = { path = "kineplex-core", version = "0.1.0" }
+kineplex-core = { path = "kineplex-core", version = "0.2.0" }
 
 # Columnar DataFrame / SQL engine
-kineplex-df = { path = "kineplex-df", version = "0.1.0" }
+kineplex-df = { path = "kineplex-df", version = "0.2.0" }
 
 # Networking
-kineplex-net = { path = "kineplex-net", version = "0.1.0" }
+kineplex-net = { path = "kineplex-net", version = "0.2.0" }
 
 # Node
-kineplex-node = { path = "kineplex-node", version = "0.1.0" }
+kineplex-node = { path = "kineplex-node", version = "0.2.0" }
 
 # SDK
-kineplex-sdk = { path = "kineplex-sdk", version = "0.1.0" }
-kineplex-sdk-macros = { path = "kineplex-sdk-macros", version = "0.1.0" }
+kineplex-sdk = { path = "kineplex-sdk", version = "0.2.0" }
+kineplex-sdk-macros = { path = "kineplex-sdk-macros", version = "0.2.0" }
 
 # CLI
-kineplex-cli = { path = "kineplex-cli", version = "0.1.0" }
+kineplex-cli = { path = "kineplex-cli", version = "0.2.0" }
 
 # External dependencies
 tokio = { version = "1.35", features = ["full"] }

@@ -1565,7 +1565,7 @@ dependencies = [
 
 [[package]]
 name = "kineplex-cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -1581,7 +1581,7 @@ dependencies = [
 
 [[package]]
 name = "kineplex-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "arrow",
@@ -1604,11 +1604,11 @@ dependencies = [
 
 [[package]]
 name = "kineplex-df"
-version = "0.1.0"
+version = "0.2.0"
 
 [[package]]
 name = "kineplex-net"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1624,7 +1624,7 @@ dependencies = [
 
 [[package]]
 name = "kineplex-node"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1644,7 +1644,7 @@ dependencies = [
 
 [[package]]
 name = "kineplex-sdk"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1659,7 +1659,7 @@ dependencies = [
 
 [[package]]
 name = "kineplex-sdk-macros"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1668,7 +1668,7 @@ dependencies = [
 
 [[package]]
 name = "kineplex-server"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "arrow",
