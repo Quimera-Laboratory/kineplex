@@ -197,6 +197,9 @@
       this.renderer.toneMappingExposure = 1.15;
 
       this.container.innerHTML = '';
+      this.renderer.domElement.setAttribute('role', 'img');
+      this.renderer.domElement.setAttribute('aria-label', 'Visualização 3D interativa da variedade Riemanniana de Ricci com 20 nós e faces de 2-simplexos');
+      this.renderer.domElement.setAttribute('tabindex', '0');
       this.container.appendChild(this.renderer.domElement);
       this.renderer.domElement.style.outline = 'none';
 

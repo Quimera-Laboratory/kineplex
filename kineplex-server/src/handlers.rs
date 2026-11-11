@@ -33,7 +33,16 @@ pub async fn readyz(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 }
 
 pub async fn get_metrics(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    let raw = state.metrics_collector.export_prometheus();
+    let obs_start = std::time::Instant::now();
+    let mut raw = state.metrics_collector.export_prometheus();
+    // Per-job counters/timers (cache 1 s) + PI budget gauges (≤1% overhead).
+    raw.push_str(&state.job_registry.export_prometheus());
+    let (overhead_ratio, sample_rate) = state.metrics_budget.gauges();
+    raw.push_str(&format!(
+        "kineplex_metrics_overhead_ratio {overhead_ratio:.6}\nkineplex_metrics_sample_rate {sample_rate:.6}\n"
+    ));
+    // PI loop: cost of this observation vs the scrape window → next sample rate.
+    state.tick_metrics_budget(obs_start.elapsed().as_nanos() as u64);
     (StatusCode::OK, [("content-type", "text/plain; version=0.0.4")], raw)
 }
 
@@ -517,7 +526,12 @@ async fn execute_real_pipeline(state: Arc<AppState>, graph_id: String) {
     let stages = ["Receptor", "Wasm", "Aggregation", "Terminal"];
     let start_time = std::time::Instant::now();
 
-    for stage_name in &stages {
+    // Metrics Budget Controller: per-job counters/timers (overhead ≤ 1%).
+    let job = state
+        .job_registry
+        .begin_job(graph_id.clone(), &stages);
+
+    for (stage_idx, stage_name) in stages.iter().enumerate() {
         // Atualizar estado
         {
             let mut jobs = state.active_jobs.write();
@@ -534,7 +548,14 @@ async fn execute_real_pipeline(state: Arc<AppState>, graph_id: String) {
             "Terminal" => 350,
             _ => 100,
         };
-        tokio::time::sleep(Duration::from_millis(sleep_ms)).await;
+
+        // Bind job to this thread at stage start (task may migrate threads).
+        let scope = job.scope();
+        {
+            let _timer = scope.stage(stage_idx);
+            tokio::time::sleep(Duration::from_millis(sleep_ms)).await;
+        }
+        drop(scope);
 
         {
             let mut jobs = state.active_jobs.write();
@@ -555,10 +576,15 @@ async fn execute_real_pipeline(state: Arc<AppState>, graph_id: String) {
     let output_file = format!("{}/part-0.parquet", output_dir);
     let _ = std::fs::create_dir_all(&output_dir);
 
-    // Gerar um batch Arrow e escrever em Parquet real
+    // Gerar um batch Arrow e escrever em Parquet real (1000 linhas reais)
     let _ = write_sample_parquet(&output_file);
+    // write_sample_parquet materializa 1000 linhas — registrar o valor real.
+    job.counters.add_rows(1000);
 
     let total_ms = start_time.elapsed().as_millis() as u64;
+
+    let snapshot = job.snapshot();
+    state.job_registry.end_job(&graph_id);
 
     {
         let mut jobs = state.active_jobs.write();
@@ -568,7 +594,7 @@ async fn execute_real_pipeline(state: Arc<AppState>, graph_id: String) {
             job.parquet_output = Some(output_file.clone());
             job.metrics = Some(JobMetricsDto {
                 total_time_ms: total_ms,
-                rows_processed: 500_000,
+                rows_processed: snapshot.rows,
                 nodes_involved: 4,
             });
         }
@@ -577,7 +603,10 @@ async fn execute_real_pipeline(state: Arc<AppState>, graph_id: String) {
     state.add_log(
         "INFO",
         "TerminalParquet",
-        &format!("Job {}: Materializado {} (Snappy compressed, 500k rows) em {}ms.", graph_id, output_file, total_ms),
+        &format!(
+            "Job {}: Materializado {} (Snappy compressed, {} rows) em {}ms.",
+            graph_id, output_file, snapshot.rows, total_ms
+        ),
     );
 }
 

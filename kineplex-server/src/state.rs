@@ -10,6 +10,8 @@ use tokio::sync::broadcast;
 use kineplex_core::geometry::{
     AdaptiveStepController, GeoNodeId, MetricTensorNormalizer, Simplex2Discoverer,
 };
+use kineplex_core::budget::BudgetController;
+use kineplex_core::job_registry::JobMetricsRegistry;
 use kineplex_core::metrics::MetricsCollector;
 use kineplex_node::control::{NodeControl, TenantQuotaInfo};
 use kineplex_node::execution::PipelineExecutor;
@@ -161,6 +163,12 @@ pub struct AppState {
     pub executor: Arc<PipelineExecutor>,
     pub node_control: Arc<NodeControl>,
     pub metrics_collector: Arc<MetricsCollector>,
+    /// Per-job counters/timers exported on `/metrics` (FT-038, Metrics Budget Controller).
+    pub job_registry: Arc<JobMetricsRegistry>,
+    /// PI controller keeping metrics overhead ≤ 1% of job CPU time.
+    pub metrics_budget: Arc<BudgetController>,
+    /// Unix nanos of the previous `/metrics` scrape (PI window).
+    metrics_scrape_last_ns: AtomicU64,
 
     // Topologia e nós
     pub nodes: RwLock<Vec<NodeDto>>,
@@ -194,6 +202,9 @@ impl AppState {
         let executor = Arc::new(PipelineExecutor::new(cluster.clone()));
         let control = Arc::new(NodeControl::new(cluster.clone(), executor.clone()));
         let metrics = Arc::new(MetricsCollector::new());
+        // Share the executor's registry so node-side jobs show up on `/metrics`.
+        let job_registry = executor.job_registry();
+        let metrics_budget = Arc::new(BudgetController::default_budget());
 
         // Registrar cotas de tenant
         control.register_tenant(TenantQuotaInfo {
@@ -366,6 +377,9 @@ impl AppState {
             executor,
             node_control: control,
             metrics_collector: metrics,
+            job_registry,
+            metrics_budget,
+            metrics_scrape_last_ns: AtomicU64::new(0),
             nodes: RwLock::new(initial_nodes),
             edges: RwLock::new(initial_edges),
             simplex_discoverer: RwLock::new(simplex_discoverer),
@@ -382,6 +396,23 @@ impl AppState {
             logs: RwLock::new(initial_logs),
             tx_events,
         })
+    }
+
+    /// One PI step for the Metrics Budget Controller: measures the wall cost
+    /// of the observation itself (export + gauges) against the scrape window
+    /// and feeds `overhead = cost / window` to the controller (plan Fase 4/5).
+    pub fn tick_metrics_budget(&self, observation_cost_ns: u64) {
+        let now_ns = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos() as u64)
+            .unwrap_or(0);
+        let last = self.metrics_scrape_last_ns.swap(now_ns, Ordering::Relaxed);
+        if last == 0 || now_ns <= last {
+            return;
+        }
+        let window_ns = (now_ns - last).max(1);
+        let raw_overhead = observation_cost_ns as f64 / window_ns as f64;
+        self.metrics_budget.tick(raw_overhead);
     }
 
     pub fn add_log(&self, level: &str, component: &str, message: &str) {
