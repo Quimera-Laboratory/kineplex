@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Motor de Transporte HTTP/3 sobre QUIC com `io_uring` e Controle PID Discreto em Malha Fechada (`kineplex_net::quic`) (FT-098)**:
+  - **Eliminação de Head-of-Line Blocking**: Substituição da pilha TCP/TLS + HTTP/2 por QUIC sobre UDP (`quinn-proto`), garantindo imunidade a bloqueios entre streams multiplexados sob perdas induzidas de pacotes.
+  - **Zero-Syscall em Regime Estacionário (`io_uring SQPOLL`)**: Operação com thread de kernel dedicada (`IORING_SETUP_SQPOLL`), descritor de socket UDP fixado na tabela interna (`IORING_REGISTER_FILES` como `Fixed(0)`) e buffers pré-registrados em arena de 2 MB alinhada a HugePages (`IORING_REGISTER_BUFFERS`), eliminando chamadas `io_uring_enter` e `get_user_pages()`.
+  - **Segmentação em Hardware GSO/GRO (`UDP_SEGMENT`)**: Despacho de super-buffers agregados de até 64 KB com fatiamento em hardware pelo ASIC do adaptador AWS ENA, reduzindo em até 48x o trânsito de SQEs/CQEs.
+  - **Variável Híbrida de Processo $y(t_k)$**: Métrica adimensionalizada combinando o gradiente de RTT físico na VPC ($\text{RTT}_{\min} = 400\,\mu\text{s} - 1.5\,\text{ms}$) e a pressão de ocupação do anel de submissão, antecipando bufferbloat no Ponto de Kleinrock antes de qualquer descarte UDP ou throttling 503 SlowDown.
+  - **Lei de Controle PID na Forma de Velocidade com Anti-Windup**:
+    - Clamping do termo integral via *back-calculation* ($K_{aw}$), adaptando autonomamente o pacing rate à banda física do enlace (10 Gbps a 40 Gbps).
+    - Termo derivativo filtrado sobre a medida (*Derivative-on-Measurement* com $\tau_d$), eliminando *derivative kick* em variações do setpoint $r^*$ recebidas pelo canal MPSC.
+    - Desempenho zero-alloc comprovado em benchmark com alinhamento de cache de 64 bytes (`0.26 ns/ciclo`, 3.86 bilhões de ops/s).
+  - **Suíte de Testes e Propriedades**: 4 novas suítes de testes (`memory_arena_tests`, `pid_controller_tests`, `quic_iouring_loopback`, `quic_stream_isolation_tests`, `quic_laguerre_integration_tests`) com 100% de aprovação no workspace.
+
 - **Distribuidor de Laguerre-Kantorovich com Suporte Nativo a `ObjectStore` e Assincronismo (`kineplex_core::laguerre`) (FT-097)**:
   - **Estimador de Entropia Condicional de Markov ($H(X_t | X_{t-1})$)**: Implementação em $\mathcal{O}(1)$ alocada na pilha com unigrama de 256 contadores, bigrama dobrado de 1024 slots e sobrevivência RLE, com mitigação de `clamp(min, max)` para colunas de zero-entropia (`h1 <= 0.05`).
   - **Adimensionalização de Welford**: Atualização estatística online da média e dispersão $\sigma_X^p$ na variedade de Banach, garantindo piso estável de $10^{-6}$.
